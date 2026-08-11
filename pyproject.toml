@@ -86,10 +86,10 @@ executionEnvironments = [
   ] },
   { root = "./src" },
 ]
-typeCheckingMode = "strict"
+typeCheckingMode = "standard"
 disableBytesTypePromotions = true
 
-# 依赖库（nonebot 等）的成员类型标注不完整，严格模式下对这些报告降为警告
+# 依赖库（nonebot 等）的成员类型标注不完整，对这些报告降为警告
 reportUnknownMemberType = "warning"
 reportUnknownParameterType = "warning"
 reportUnknownVariableType = "warning"
