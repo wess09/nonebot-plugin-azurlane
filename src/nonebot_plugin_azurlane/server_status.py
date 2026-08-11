@@ -9,17 +9,19 @@ import httpx
 
 STATUS_API = "https://server-checker.nanoda.work/api/v1/status"
 
-# 地区 key -> le3-api server_id 前缀（渠道服 le3-api 无数据，不可用）
+# 地区 key -> le3-api server_id 前缀（渠道服 le3-api 无数据，不可用）。
 _PREFIX: dict[str, int] = {
     "cn": 100,
     "cn_ios": 200,
 }
 
-# 渠道服 le3-api 不支持，仅用于 UI 展示（选择后提示失败）
+# 渠道服 le3-api 不支持，仅用于 UI 展示（选择后提示失败）。
 CHANNEL_KEYS = {"cn_channel"}
 
 
 class Server(TypedDict):
+    """单个服务器条目（id 为游戏协议纯序号）。"""
+
     key: str
     region_name: str
     name: str

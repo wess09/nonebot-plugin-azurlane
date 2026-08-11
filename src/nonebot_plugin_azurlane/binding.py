@@ -16,15 +16,18 @@ from nonebot_plugin_localstore import get_plugin_data_dir
 
 @dataclass
 class Binding:
+    """一条 QQ 绑定记录。"""
+
     uid: str
     server_id: str
-    server_label: str  # 仅服务端内部使用，不展示给用户
+    server_label: str  # 仅服务端内部使用，不展示给用户。
 
 
 _conn: sqlite3.Connection | None = None
 
 
 def _get_conn() -> sqlite3.Connection:
+    """惰性初始化 SQLite 连接，首次调用时建表。"""
     global _conn
     if _conn is None:
         data_dir = get_plugin_data_dir()
@@ -46,6 +49,7 @@ def _get_conn() -> sqlite3.Connection:
 
 
 def save_binding(qq: str, binding: Binding) -> None:
+    """写入绑定记录，已存在则按 QQ 覆盖更新。"""
     conn = _get_conn()
     conn.execute(
         "INSERT INTO bindings (qq, uid, server_id, server_label) "
@@ -58,6 +62,7 @@ def save_binding(qq: str, binding: Binding) -> None:
 
 
 def get_binding(qq: str) -> Binding | None:
+    """按 QQ 查询绑定记录，未绑定返回 None。"""
     conn = _get_conn()
     sql = "SELECT uid, server_id, server_label FROM bindings WHERE qq=?"
     row = conn.execute(sql, (qq,)).fetchone()

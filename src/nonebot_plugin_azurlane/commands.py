@@ -16,7 +16,8 @@ bind_cmd = on_command("绑定", aliases={"登录"}, priority=5, block=True)
 
 
 @commander_cmd.handle()
-async def handle_commander(bot: Bot, event: MessageEvent):
+async def handle_commander(bot: Bot, event: MessageEvent) -> None:
+    """处理 /指挥官：查询并发送指挥官信息面板。"""
     qq = str(event.user_id)
     binding = get_binding(qq)
     if binding is None:
@@ -35,7 +36,8 @@ async def handle_commander(bot: Bot, event: MessageEvent):
 
 
 @build_cmd.handle()
-async def handle_build(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
+async def handle_build(bot: Bot, event: MessageEvent, arg: Message = CommandArg()) -> None:
+    """处理 /建造 [数量]：查询并发送建造记录面板。"""
     qq = str(event.user_id)
     binding = get_binding(qq)
     if binding is None:
@@ -68,14 +70,15 @@ async def handle_build(bot: Bot, event: MessageEvent, arg: Message = CommandArg(
 
 
 @bind_cmd.handle()
-async def handle_bind(bot: Bot, event: MessageEvent):
+async def handle_bind(bot: Bot, event: MessageEvent) -> None:
+    """处理 /绑定：生成一次性会话并发送登录二维码。"""
     qq = str(event.user_id)
-    # 生成一次性 token 会话，登录 URL 只带 token，不暴露 QQ / 回调信息
+    # 登录 URL 只带 token，不暴露 QQ / 回调信息。
     cb = f"{config.azurlane_api_base_url}/api/bind_cb"
     token = session.create_session(qq, cb)
     url = f"{config.azurlane_bind_base_url}/login?t={token}"
 
-    # 生成二维码图片（中心嵌圆形头像）
+    # 生成二维码图片（中心嵌圆形头像）。
     img_bytes = make_bind_qr(url)
 
     await bind_cmd.finish(

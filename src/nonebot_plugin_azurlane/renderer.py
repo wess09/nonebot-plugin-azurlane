@@ -51,10 +51,12 @@ def _font_faces() -> str:
 
 
 def _logo_data_uri() -> str:
+    """页眉 logo 的 data URI（文件缺失时为空串）。"""
     return _image_data_uri(LOGO_PATH, "image/webp")
 
 
 def _image_data_uri(path: Path, media_type: str) -> str:
+    """读取图片为 base64 data URI，文件缺失时返回空串。"""
     if not path.exists():
         return ""
     b64 = base64.b64encode(path.read_bytes()).decode()
@@ -83,10 +85,12 @@ def _rate_pct(v: object) -> float:
 
 
 def _fmt_number(v: int) -> str:
+    """格式化数字为带千分位的字符串（如 1,234,567）。"""
     return f"{v:,}"
 
 
 async def _render(html: str) -> bytes:
+    """调用 htmlrender 将 HTML 渲染为 PNG bytes。"""
     rendered = await render_html(
         html,
         width=540,
@@ -97,8 +101,9 @@ async def _render(html: str) -> bytes:
 
 
 def _fill(template_name: str, data: TemplateData) -> str:
+    """读取模板并注入 @font-face 与 {{KEY}} 占位符，返回完整 HTML。"""
     html = (TEMPLATE_DIR / template_name).read_text(encoding="utf-8")
-    # 注入字体的 @font-face（放于 <style> 标签内）
+    # 注入字体的 @font-face（放于 <style> 标签内）。
     html = html.replace(
         "<style>",
         "<style>" + _font_faces(),
@@ -114,6 +119,7 @@ def _as_str(v: object) -> str:
 
 
 async def build_commanders_pic(detail: UserDetail) -> bytes:
+    """构建指挥官信息面板图片。"""
     ui = detail["user_info"]
     stat = detail["statistics"]
     pt = detail["progress_tracking"]
@@ -133,7 +139,7 @@ async def build_commanders_pic(detail: UserDetail) -> bytes:
     rate_str = _fmt_collection_rate(stat["collection_rate"])
     rate_pct = int(_rate_pct(stat["collection_rate"]))
 
-    # 收集率圆环：SVG stroke-dasharray（半径 37）
+    # 收集率圆环：SVG stroke-dasharray（半径 37）。
     rate_circ = 2 * 3.1416 * 37
     rate_offset = rate_circ * (1 - rate_pct / 100)
 
@@ -199,6 +205,7 @@ def _rarity_class(rarity: str) -> str:
 
 
 async def build_build_records_pic(result: BuildRecordResult) -> bytes:
+    """构建建造记录面板图片。"""
     nickname = result["nickname"] or ""
     records = result["records"]
     total_count = result["total_count"]

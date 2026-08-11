@@ -9,6 +9,8 @@ from typing import TypedDict
 
 
 class Session(TypedDict):
+    """一个绑定会话：QQ、回调地址与创建时间戳。"""
+
     qq: str
     cb: str
     created: float
@@ -20,6 +22,7 @@ _TTL = 10 * 60  # 10 分钟
 
 
 def create_session(qq: str, cb: str) -> str:
+    """创建绑定会话，返回一次性 token。"""
     token = secrets.token_urlsafe(16)
     _sessions[token] = Session(qq=qq, cb=cb, created=time.time())
     _cleanup()
@@ -27,6 +30,7 @@ def create_session(qq: str, cb: str) -> str:
 
 
 def get_session(token: str) -> Session | None:
+    """按 token 查询会话，不存在或已过期返回 None。"""
     if not token:
         return None
     sess = _sessions.get(token)
@@ -47,6 +51,7 @@ def consume_session(token: str) -> Session | None:
 
 
 def _cleanup() -> None:
+    """清理所有已过期的会话。"""
     now = time.time()
     for token in [t for t, s in _sessions.items() if now - s["created"] > _TTL]:
         _sessions.pop(token, None)

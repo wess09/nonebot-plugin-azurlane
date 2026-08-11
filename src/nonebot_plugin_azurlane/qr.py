@@ -33,7 +33,7 @@ def _round_logo(size: int) -> Image.Image:
 
 def make_bind_qr(url: str) -> bytes:
     """生成绑定二维码 PNG bytes：圆角码点 + 水平渐变 + 中心圆形头像。"""
-    # 错误修正 H：中心放 logo 后仍可扫描
+    # 错误修正 H：中心放 logo 后仍可扫描。
     qr = qrcode.QRCode(
         version=None,
         error_correction=ERROR_CORRECT_H,
@@ -54,7 +54,7 @@ def make_bind_qr(url: str) -> bytes:
         color_mask=mask,
     ).convert("RGBA")
 
-    # 中心 logo：占二维码 ~22% 边长
+    # 中心 logo：占二维码 ~22% 边长。
     logo_size = int(qr_img.size[0] * 0.22)
     logo = _round_logo(logo_size)
     pos = ((qr_img.size[0] - logo_size) // 2, (qr_img.size[1] - logo_size) // 2)

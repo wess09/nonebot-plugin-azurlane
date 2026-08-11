@@ -12,10 +12,10 @@ from .types import (
 BASE_URL = "https://le3-api.game.bilibili.com/x/api/azurlane"
 GAME_ID = "182"
 
-# 直连（trust_env=False），避免被本机系统代理劫持导致 TLS 失败
+# 直连（trust_env=False），避免被本机系统代理劫持导致 TLS 失败。
 _TIMEOUT = httpx.Timeout(15)
 
-# 伪装成微信小程序客户端，缺少会被接口拒绝
+# 伪装成微信小程序客户端，缺少会被接口拒绝。
 HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -32,6 +32,7 @@ class APIError(Exception):
 
 
 def _build_headers(cookie: str | None) -> dict[str, str]:
+    """构造请求头，可选附加 Cookie。"""
     headers: dict[str, str] = dict(HEADERS)
     if cookie:
         headers["Cookie"] = cookie

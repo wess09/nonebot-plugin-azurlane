@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import Request, APIRouter
 from nonebot import get_bot
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import Response, FileResponse, HTMLResponse, JSONResponse
 
 from . import le3api, session, server_status
 from .config import config
@@ -20,10 +20,8 @@ _UID_RE = re.compile(r"^\d{3,12}$")
 
 
 @router.get("/static/login_avatar.webp")
-async def static_login_avatar():
+async def static_login_avatar() -> Response:
     """本地头像（登录页品牌用），避免浏览器直连 B 站 CDN 失败。"""
-    from fastapi.responses import FileResponse
-
     path = Path(__file__).parent.parent.parent / "static" / "login_avatar.webp"
     if path.exists():
         return FileResponse(path, media_type="image/webp")
@@ -31,10 +29,8 @@ async def static_login_avatar():
 
 
 @router.get("/static/login_bg.mp4")
-async def static_login_bg():
+async def static_login_bg() -> Response:
     """本地登录页背景视频，避免浏览器直连 B 站 CDN 失败。"""
-    from fastapi.responses import FileResponse
-
     path = Path(__file__).parent.parent.parent / "static" / "login_bg.mp4"
     if path.exists():
         return FileResponse(path, media_type="video/mp4")
@@ -43,10 +39,12 @@ async def static_login_bg():
 
 @router.get("/login")
 async def login_page(qq: str = "") -> HTMLResponse:
-    # 登录页已改为纯静态（QQ 由前端从 URL 读取、资源相对路径），
-    # bot 本地 /login 也可直接用：相对资源指向 /static/，由本服务托管。
+    """渲染登录页 HTML。
+
+    登录页为纯静态自包含页面；本地 /login 把相对资源指回 /static/ 由本服务托管，
+    CDN 部署则使用 static/login/ 下的静态版副本。
+    """
     html = (TEMPLATE_DIR / "login.html").read_text(encoding="utf-8")
-    # 本地托管：把相对资源路径指回 /static/（CDN 部署用静态版，见 static/login/）
     html = html.replace("./login_bg.mp4", "/static/login_bg.mp4")
     html = html.replace("./login_avatar.webp", "/static/login_avatar.webp")
     return HTMLResponse(html)
@@ -54,6 +52,7 @@ async def login_page(qq: str = "") -> HTMLResponse:
 
 @router.get("/api/servers")
 async def api_servers() -> JSONResponse:
+    """返回可用区服列表（已换算 le3_id，且不含渠道服）。"""
     try:
         servers = await server_status.fetch_servers()
     except Exception as e:
@@ -94,13 +93,14 @@ async def api_session(token: str) -> JSONResponse:
 
 @router.post("/api/bind")
 async def api_bind(request: Request) -> JSONResponse:
+    """校验 UID + 区服并写入绑定，返回指挥官昵称。"""
     body = await request.json()
     token = str(body.get("token", "")).strip()
     uid = str(body.get("uid", "")).strip()
     le3_id = str(body.get("le3_id", "")).strip()
     server_label = str(body.get("server_label", "")).strip()
 
-    # 通过一次性 token 定位 QQ 会话，避免 URL 暴露 QQ
+    # 通过一次性 token 定位 QQ 会话，避免 URL 暴露 QQ。
     sess = session.get_session(token)
     if sess is None:
         msg = "会话不存在或已过期，请重新在 QQ 内发起绑定。"
@@ -112,7 +112,7 @@ async def api_bind(request: Request) -> JSONResponse:
     if not le3_id:
         return JSONResponse({"ok": False, "message": "请选择区服。"})
 
-    # 校验：调用 le3-api 确认 UID + 区服有效，顺带取昵称
+    # 校验：调用 le3-api 确认 UID + 区服有效，顺带取昵称。
     try:
         detail = await le3api.get_user_detail(uid, le3_id, cookie=config.azurlane_cookie)
         nickname = detail.get("user_info", {}).get("nickname") or ""
