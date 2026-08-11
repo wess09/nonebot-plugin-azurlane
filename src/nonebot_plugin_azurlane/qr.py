@@ -5,6 +5,7 @@ from pathlib import Path
 
 import qrcode
 from PIL import Image, ImageDraw
+from qrcode.constants import ERROR_CORRECT_H
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import HorizontalGradiantColorMask
 from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
@@ -13,14 +14,14 @@ from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 AVATAR_PATH = Path(__file__).parent.parent.parent / "static" / "login_avatar.webp"
 
 # 渐变配色：天蓝 -> 海蓝
-_LEFT_COLOR = (74, 157, 232)  # #4a9de8
-_RIGHT_COLOR = (26, 95, 180)  # #1a5fb4
+_LEFT_COLOR: tuple[int, int, int] = (74, 157, 232)  # #4a9de8
+_RIGHT_COLOR: tuple[int, int, int] = (26, 95, 180)  # #1a5fb4
 
 
 def _round_logo(size: int) -> Image.Image:
     """裁剪头像为圆形，返回 size×size RGBA。"""
     img = Image.open(AVATAR_PATH).convert("RGBA")
-    img = img.resize((size, size), Image.Resampling.LANCZOS)
+    img = img.resize((size, size), Image.Resampling.LANCZOS)  # type: ignore[reportUnknownMemberType]
 
     mask = Image.new("L", (size, size), 0)
     ImageDraw.Draw(mask).ellipse((0, 0, size, size), fill=255)
@@ -35,7 +36,7 @@ def make_bind_qr(url: str) -> bytes:
     # 错误修正 H：中心放 logo 后仍可扫描
     qr = qrcode.QRCode(
         version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        error_correction=ERROR_CORRECT_H,
         box_size=10,
         border=2,
     )

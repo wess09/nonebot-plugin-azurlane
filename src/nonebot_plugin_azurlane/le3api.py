@@ -2,6 +2,13 @@
 
 import httpx
 
+from .types import (
+    JsonObj,
+    UserDetail,
+    BuildRecordItem,
+    BuildRecordResult,
+)
+
 BASE_URL = "https://le3-api.game.bilibili.com/x/api/azurlane"
 GAME_ID = "182"
 
@@ -9,7 +16,7 @@ GAME_ID = "182"
 _TIMEOUT = httpx.Timeout(15)
 
 # 伪装成微信小程序客户端，缺少会被接口拒绝
-HEADERS = {
+HEADERS: dict[str, str] = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 "
@@ -24,24 +31,27 @@ class APIError(Exception):
     """接口业务错误，message 为可展示文案。"""
 
 
-def _build_headers(cookie: str | None) -> dict:
-    headers = dict(HEADERS)
+def _build_headers(cookie: str | None) -> dict[str, str]:
+    headers: dict[str, str] = dict(HEADERS)
     if cookie:
         headers["Cookie"] = cookie
     return headers
 
 
-def _envelope_check(data: dict) -> dict:
+def _envelope_check(data: JsonObj) -> JsonObj:
     """校验统一响应信封；code != 0 直接抛错。"""
     code = data.get("code")
     if code != 0:
         raise APIError(data.get("message") or f"接口错误（code={code}）")
-    return data.get("data") or {}
+    raw = data.get("data")
+    if not isinstance(raw, dict):
+        raise APIError("接口返回数据格式异常")
+    return raw
 
 
-async def get_user_detail(role_id: str, server_id: str, cookie: str | None = None) -> dict:
+async def get_user_detail(role_id: str, server_id: str, cookie: str | None = None) -> UserDetail:
     """指挥官详情 get/user_detail。"""
-    params = {
+    params: dict[str, str] = {
         "role_id": role_id,
         "server_id": server_id,
         "game_id": GAME_ID,
@@ -53,7 +63,7 @@ async def get_user_detail(role_id: str, server_id: str, cookie: str | None = Non
             headers=_build_headers(cookie),
         )
     resp.raise_for_status()
-    return _envelope_check(resp.json())
+    return _envelope_check(resp.json())  # type: ignore[return-value]
 
 
 async def get_build_record(
@@ -61,22 +71,25 @@ async def get_build_record(
     server_id: str,
     target_count: int = 10,
     cookie: str | None = None,
-) -> dict:
+) -> BuildRecordResult:
     """建造记录 get/build_record，按每页最多 50 条循环拉取凑够 target_count。
 
     分页约定见 API.md：最后一页 page_size 取剩余量；任一页非 0 即中断。
     """
     target_count = max(1, min(target_count, 500))
-    records: list[dict] = []
+    records: list[BuildRecordItem] = []
     page_num = 1
     remaining = target_count
     page_size = min(remaining, 50)
-    nickname = uid = server_name = avatar = None
+    nickname: str | None = None
+    uid: str | None = None
+    server_name: str | None = None
+    avatar: str | None = None
     total_count = 0
 
     async with httpx.AsyncClient(timeout=_TIMEOUT, trust_env=False) as client:
         while remaining > 0:
-            params = {
+            params: dict[str, str] = {
                 "role_id": role_id,
                 "server_id": server_id,
                 "page_num": str(page_num),
@@ -90,27 +103,34 @@ async def get_build_record(
             resp.raise_for_status()
             data = _envelope_check(resp.json())
 
-            nickname = data.get("nickname", nickname)
-            uid = data.get("uid", uid)
-            server_name = data.get("serverName", server_name)
-            avatar = data.get("avatar", avatar)
-            total_count = data.get("buildRecords", {}).get("total_count", total_count)
+            nickname = data.get("nickname", nickname)  # type: ignore[assignment]
+            uid = data.get("uid", uid)  # type: ignore[assignment]
+            server_name = data.get("serverName", server_name)  # type: ignore[assignment]
+            avatar = data.get("avatar", avatar)  # type: ignore[assignment]
 
-            page = data.get("buildRecords", {}).get("data") or []
-            if not page:
+            build_records = data.get("buildRecords")
+            if isinstance(build_records, dict):
+                total = build_records.get("total_count")
+                if isinstance(total, int):
+                    total_count = total
+                page = build_records.get("data")
+            else:
+                page = None
+
+            if not isinstance(page, list):
                 break
-            records.extend(page)
+            records.extend(page)  # type: ignore[arg-type]
             remaining -= len(page)
             if remaining <= 0:
                 break
             page_num += 1
             page_size = min(remaining, 50)
 
-    return {
-        "nickname": nickname,
-        "uid": uid,
-        "server_name": server_name,
-        "avatar": avatar,
-        "total_count": total_count,
-        "records": records,
-    }
+    return BuildRecordResult(
+        nickname=nickname,
+        uid=uid,
+        server_name=server_name,
+        avatar=avatar,
+        total_count=total_count,
+        records=records,
+    )

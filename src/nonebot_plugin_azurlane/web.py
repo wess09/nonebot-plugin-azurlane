@@ -59,7 +59,7 @@ async def api_servers() -> JSONResponse:
     except Exception as e:
         return JSONResponse({"ok": False, "message": f"区服列表拉取失败：{e}"}, status_code=502)
 
-    regions: dict[str, dict] = {}
+    regions: dict[str, dict[str, object]] = {}
     for sv in servers:
         if sv["key"] in server_status.CHANNEL_KEYS:
             continue
@@ -67,16 +67,18 @@ async def api_servers() -> JSONResponse:
         if le3_id is None:
             continue
         region = regions.setdefault(
-            sv["key"], {"key": sv["key"], "name": sv["region_name"], "servers": []}
+            sv["key"],
+            {"key": sv["key"], "name": sv["region_name"], "servers": []},
         )
-        region["servers"].append(
-            {
-                "id": sv["id"],
-                "name": sv["name"],
-                "status": sv["status"],
-                "le3_id": str(le3_id),
-            }
-        )
+        servers_list = region["servers"]
+        assert isinstance(servers_list, list)
+        sv_entry: dict[str, object] = {
+            "id": sv["id"],
+            "name": sv["name"],
+            "status": sv["status"],
+            "le3_id": str(le3_id),
+        }
+        servers_list.append(sv_entry)
     return JSONResponse({"ok": True, "regions": list(regions.values())})
 
 

@@ -5,20 +5,28 @@
 
 import time
 import secrets
+from typing import TypedDict
 
-# token -> {"qq": str, "cb": str, "created": float}
-_sessions: dict[str, dict] = {}
+
+class Session(TypedDict):
+    qq: str
+    cb: str
+    created: float
+
+
+# token -> Session
+_sessions: dict[str, Session] = {}
 _TTL = 10 * 60  # 10 分钟
 
 
 def create_session(qq: str, cb: str) -> str:
     token = secrets.token_urlsafe(16)
-    _sessions[token] = {"qq": qq, "cb": cb, "created": time.time()}
+    _sessions[token] = Session(qq=qq, cb=cb, created=time.time())
     _cleanup()
     return token
 
 
-def get_session(token: str) -> dict | None:
+def get_session(token: str) -> Session | None:
     if not token:
         return None
     sess = _sessions.get(token)
@@ -30,7 +38,7 @@ def get_session(token: str) -> dict | None:
     return sess
 
 
-def consume_session(token: str) -> dict | None:
+def consume_session(token: str) -> Session | None:
     """取出并删除会话（绑定完成后一次性消费）。"""
     sess = get_session(token)
     if sess is not None:

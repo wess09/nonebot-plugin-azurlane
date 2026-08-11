@@ -23,12 +23,16 @@ driver = get_driver()
 
 # 静态登录页可能部署在 CDN/其他域名，需在应用启动前就放开跨域并挂载 Web 路由
 try:
+    from typing import cast
+
     from fastapi import FastAPI
+    from nonebot.drivers import ASGIMixin
     from starlette.middleware.cors import CORSMiddleware
 
     from .web import router
 
-    app: FastAPI = get_driver().server_app
+    # get_driver() 静态类型是基类 Driver，ASGIMixin 才声明 server_app
+    app: FastAPI = cast(ASGIMixin, get_driver()).server_app
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

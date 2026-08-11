@@ -20,8 +20,12 @@ data/nonebot_plugin_*/
 htmlcov/
 junit.xml
 .pytest_cache/
+.ruff_cache/
 
 # 编辑器 / 系统
 .idea/
 .vscode/
 .DS_Store
+
+# Claude Code 本地配置
+.claude/
