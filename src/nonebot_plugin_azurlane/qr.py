@@ -10,8 +10,8 @@ from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import HorizontalGradiantColorMask
 from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 
-# 头像文件：static/login_avatar.webp
-AVATAR_PATH = Path(__file__).parent.parent.parent / "static" / "login_avatar.webp"
+# 头像文件：包内 static/login_avatar.webp
+AVATAR_PATH = Path(__file__).parent / "static" / "login_avatar.webp"
 
 # 渐变配色：天蓝 -> 海蓝
 _LEFT_COLOR: tuple[int, int, int] = (74, 157, 232)  # #4a9de8

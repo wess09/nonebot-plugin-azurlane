@@ -37,13 +37,13 @@ src/nonebot_plugin_azurlane/
   commands.py          # 指令：/指挥官、/建造、/绑定（发二维码）
   renderer.py          # 读 templates/*.html 替换占位符 -> htmlrender render_html -> bytes
   templates/           # commander.html / build_record.html / login.html
-static/login/          # CDN 部署的静态登录页副本（index.html + 视频 + 头像）
-data/                  # 渲染资源：字体(.ttf)、logo、吉祥物（renderer/qr/web 以项目根路径读取）
+  data/                # 渲染资源：字体(.ttf)、logo、吉祥物（renderer 按包内路径读取）
+  static/              # 登录页素材：login_avatar.webp / login_bg.mp4 / login/（CDN 静态副本）
 tests/                 # pytest + nonebug（模板骨架，nonebug 中文消息对比在 Windows 有兼容问题，测试用加载 smoke test）
 .github/workflows/     # CI / release（uv + basedpyright + prek + typos）
 ```
 
-> 资源路径约定：包内 `Path(__file__).parent.parent.parent` = 项目根（`src/nonebot_plugin_azurlane/` 比原 `src/plugins/azurlane/` 少一层，迁移时已修正）。渲染资源（`data/` 的字体/logo/吉祥物）与 `static/` 均按此路径定位。
+> 资源路径约定：渲染资源（`data/` 的字体/logo/吉祥物）与登录页素材（`static/`）都打进包内，代码用 `Path(__file__).parent / "data"`、`/ "static"` 定位（`templates/` 同理），随 wheel 一起分发，`pip install` 装完即用。仓库根目录的 `data/` 只剩 localstore 运行时产物（`nonebot_plugin_*`，gitignore 已忽略）。
 > Python 版本固定在 `.python-version` = 3.12（模板 CI 同）。
 
 ## 绑定流程
@@ -58,7 +58,7 @@ tests/                 # pytest + nonebug（模板骨架，nonebug 中文消息�
 - **le3-api 调用**（le3api.py）：必须带微信小程序 UA + Referer 伪装请求头；响应统一信封 `{code, message, data}`，`code != 0` 抛 `APIError`。**必须用 `httpx.AsyncClient(trust_env=False)`**（异步 + 直连）——本机系统代理（127.0.0.1:7890）会劫持导致 TLS 失败；同步 `httpx.Client` 会阻塞事件循环，禁用。
 - **区服换算**：`AzurLaneServerStatus` 返回的服务器 `id` 是游戏协议纯序号，le3-api 需要 `100+id`（官网）/ `200+id`（iOS）；渠道服 `300+id` le3-api **无数据**，绑定需拒绝。换算在 `server_status.server_id_for()`。
 - **敏感信息**：区服、server_id **只存服务端**（binding.py），绝不出现在任何 QQ 回复、HTML 面板中。这是硬性要求。
-- **登录页静态化**：login.html 是纯静态自包含页面（QQ 从 URL `t` 参数经 /api/session 换取），可部署 CDN；`static/login/` 是它的副本。改模板后需 `cp src/nonebot_plugin_azurlane/templates/login.html static/login/index.html` 同步。
+- **登录页静态化**：login.html 是纯静态自包含页面（QQ 从 URL `t` 参数经 /api/session 换取），可部署 CDN；包内 `static/login/` 是它的副本。改模板后需 `cp src/nonebot_plugin_azurlane/templates/login.html src/nonebot_plugin_azurlane/static/login/index.html` 同步。
 - **渲染**（renderer.py）：htmlrender 0.8+ API 是 `render_html(html, ...)` 返回 `RenderedImage`（`.data` 为 bytes）；模板用 `{{KEY}}` 占位符手工替换，不引入 Jinja。需在 .env 配 `RENDER__PROVIDER=playwright` + `RENDER__PROVIDER_CONFIG__EXECUTABLE_PATH` 指向已装 Chromium（本地另配了 `RENDER__PROVIDER_CONFIG__SKIP_BROWSER_INSTALL=true` 跳过自动安装）。
 - **collection_rate** 实测是字符串 `"0.0%"`（非文档的 0~1 小数），renderer 里 `_fmt_collection_rate` 两种都兼容。
 
@@ -67,4 +67,4 @@ tests/                 # pytest + nonebug（模板骨架，nonebug 中文消息�
 - 一个 OneBot 11 实现（NapCat/go-cqhttp）监听 `ONEBOT_WS_URLS` 指定地址，否则 bot 启动后持续重连（正常现象）。
 - bot 监听 8081（`.env` 的 `PORT`）而非 NoneBot 默认 8080。改端口需同步改 `.env` 的 `PORT`、`AZURLANE_BIND_BASE_URL`、`AZURLANE_API_BASE_URL`（`.env` 是端口唯一来源，pyproject.toml 无端口配置）。
 - Chromium 手动装在 `C:\Users\AzurLane\AppData\Local\ms-playwright\chromium_headless_shell-1234\...`。
-- 绑定数据 SQLite 存于 nonebot-plugin-localstore 数据目录（`get_plugin_data_dir()/azurlane.db`），运行时自动创建；`data/`（字体/logo/吉祥物）、`static/`、登录页资源已提交进仓库。
+- 绑定数据 SQLite 存于 nonebot-plugin-localstore 数据目录（`get_plugin_data_dir()/azurlane.db`），运行时自动创建；`data/`（字体/logo/吉祥物）、`static/`（登录页素材）、登录页资源随包打进 wheel 已提交进仓库。

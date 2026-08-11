@@ -11,26 +11,24 @@ from nonebot_plugin_htmlrender import render_html
 from .types import UserDetail, BuildRecordResult
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
-# 项目根目录下的 data/blhx_logo.webp（碧蓝航线官方 logo，页眉用）
-LOGO_PATH = Path(__file__).parent.parent.parent / "data" / "blhx_logo.webp"
+# 包内 data/blhx_logo.webp（碧蓝航线官方 logo，页眉用）
+LOGO_PATH = Path(__file__).parent / "data" / "blhx_logo.webp"
 _MASCOT_PATHS = tuple(
-    Path(__file__).parent.parent.parent / "data" / "mascots" / name
+    Path(__file__).parent / "data" / "mascots" / name
     for name in ("ship_girl_1.png", "ship_girl_2.png", "ship_girl_3.png")
 )
 _COLLECTION_MASCOT_PATHS = tuple(
-    Path(__file__).parent.parent.parent / "data" / "mascots" / name
+    Path(__file__).parent / "data" / "mascots" / name
     for name in ("akashi_chibi.png", "laffey_chibi.png", "ayanami_chibi.png")
 )
-# 碧蓝航线游戏内字体（来自 data/ 目录）
+# 碧蓝航线游戏内字体（来自包内 data/ 目录）
 _FONTS: dict[str, Path] = {
     # 标题粗黑体
-    "MStiffHei": Path(__file__).parent.parent.parent / "data" / "MStiffHei.ttf",
+    "MStiffHei": Path(__file__).parent / "data" / "MStiffHei.ttf",
     # 界面正文
-    "SourceHanSans": Path(__file__).parent.parent.parent / "data" / "SourceHanSans.ttf",
-    # 艺术宋体标题
-    "FZCYSK": Path(__file__).parent.parent.parent / "data" / "FZCYSK.ttf",
+    "SourceHanSans": Path(__file__).parent / "data" / "SourceHanSans.ttf",
     # 西文数字/英文标语
-    "Agency": Path(__file__).parent.parent.parent / "data" / "agency.ttf",
+    "Agency": Path(__file__).parent / "data" / "agency.ttf",
 }
 
 # 模板占位符数据：统一 str（占位符替换用）
@@ -95,7 +93,7 @@ async def _render(html: str) -> bytes:
         html,
         width=540,
         device_pixel_ratio=2.0,
-        timeout_seconds=30,
+        timeout_seconds=120,
     )
     return rendered.data
 

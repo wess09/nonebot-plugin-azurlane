@@ -22,7 +22,7 @@ _UID_RE = re.compile(r"^\d{3,12}$")
 @router.get("/static/login_avatar.webp")
 async def static_login_avatar() -> Response:
     """本地头像（登录页品牌用），避免浏览器直连 B 站 CDN 失败。"""
-    path = Path(__file__).parent.parent.parent / "static" / "login_avatar.webp"
+    path = Path(__file__).parent / "static" / "login_avatar.webp"
     if path.exists():
         return FileResponse(path, media_type="image/webp")
     return JSONResponse({"ok": False, "message": "头像资源缺失"}, status_code=404)
@@ -31,7 +31,7 @@ async def static_login_avatar() -> Response:
 @router.get("/static/login_bg.mp4")
 async def static_login_bg() -> Response:
     """本地登录页背景视频，避免浏览器直连 B 站 CDN 失败。"""
-    path = Path(__file__).parent.parent.parent / "static" / "login_bg.mp4"
+    path = Path(__file__).parent / "static" / "login_bg.mp4"
     if path.exists():
         return FileResponse(path, media_type="video/mp4")
     return JSONResponse({"ok": False, "message": "视频资源缺失"}, status_code=404)

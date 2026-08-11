@@ -49,15 +49,15 @@ python bot.py
 
 ### 登录页部署到 CDN
 
-登录页是**纯静态自包含**页面，可部署到 CDN 加速分发（`static/login/` 目录）：
+登录页是**纯静态自包含**页面，可部署到 CDN 加速分发（包内 `src/nonebot_plugin_azurlane/static/login/` 目录）：
 
 ```bash
-# 部署 static/login/ 目录到 CDN 即可：index.html + login_bg.mp4 + login_avatar.webp
+# 部署 src/nonebot_plugin_azurlane/static/login/ 目录到 CDN 即可：index.html + login_bg.mp4 + login_avatar.webp
 ```
 
 - `.env` 中 `AZURLANE_BIND_BASE_URL` 设为 CDN 页面地址（`/绑定` 指令的二维码指向它）
 - `AZURLANE_API_BASE_URL` 设为 bot 公网地址（登录页绑定接口与回调跳转目标）
-- 登录页 `static/login/index.html` 顶部 `API_BASE` 常量改为 bot 公网地址（若与页面不同源）
+- 登录页 `src/nonebot_plugin_azurlane/static/login/index.html` 顶部 `API_BASE` 常量改为 bot 公网地址（若与页面不同源）
 - bot 已开放 CORS（`allow_origins=["*"]`），支持跨域调用 `/api/*`
 - 页面无 token 时提示"请先在 QQ 内发起绑定"，防止直接访问滥用
 
@@ -76,7 +76,8 @@ src/nonebot_plugin_azurlane/
   qr.py                         # 绑定二维码（圆角渐变 + 中心头像）
   commands.py                   # 机器人指令（/指挥官 /建造 /绑定）
   templates/                    # HTML 面板模板 + 登录页
-static/login/                   # CDN 部署的静态登录页（index.html + 视频 + 头像）
+  data/                         # 渲染资源：字体 / logo / 吉祥物
+  static/                       # 登录页素材（login_avatar / login_bg / login/ CDN 副本）
 tests/                          # pytest + nonebug 测试
 .github/workflows/              # CI / release
 ```
