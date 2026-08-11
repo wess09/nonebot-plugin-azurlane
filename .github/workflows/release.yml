@@ -35,13 +35,15 @@ jobs:
         if: steps.version.outputs.VERSION != steps.version.outputs.TAG_VERSION
         run: exit 1
 
-      - name: Build 
+      - name: Build and Publish
         run: |
           uv build
-          uv publish
+          if ! curl -fsS "https://pypi.org/pypi/nonebot-plugin-azurlane/${{ steps.version.outputs.TAG_VERSION }}/json" > /dev/null 2>&1; then
+            uv publish
+          fi
 
-      - name: Upload Release Asset
-        run: gh release upload --clobber ${{ steps.version.outputs.TAG_NAME }} dist/*.tar.gz dist/*.whl
+      - name: Create Release and Upload Assets
+        run: gh release create --generate-notes ${{ steps.version.outputs.TAG_NAME }} dist/*.tar.gz dist/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
