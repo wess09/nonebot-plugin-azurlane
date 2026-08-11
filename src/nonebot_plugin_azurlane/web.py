@@ -3,14 +3,13 @@
 import re
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import Request, APIRouter
+from nonebot import get_bot
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from nonebot import get_bot
-
-from . import le3api, server_status, session
-from .binding import Binding, save_binding
+from . import le3api, session, server_status
 from .config import config
+from .binding import Binding, save_binding
 
 router = APIRouter()
 
@@ -25,7 +24,7 @@ async def static_login_avatar():
     """本地头像（登录页品牌用），避免浏览器直连 B 站 CDN 失败。"""
     from fastapi.responses import FileResponse
 
-    path = Path(__file__).parent.parent.parent.parent / "static" / "login_avatar.webp"
+    path = Path(__file__).parent.parent.parent / "static" / "login_avatar.webp"
     if path.exists():
         return FileResponse(path, media_type="image/webp")
     return JSONResponse({"ok": False, "message": "头像资源缺失"}, status_code=404)
@@ -36,7 +35,7 @@ async def static_login_bg():
     """本地登录页背景视频，避免浏览器直连 B 站 CDN 失败。"""
     from fastapi.responses import FileResponse
 
-    path = Path(__file__).parent.parent.parent.parent / "static" / "login_bg.mp4"
+    path = Path(__file__).parent.parent.parent / "static" / "login_bg.mp4"
     if path.exists():
         return FileResponse(path, media_type="video/mp4")
     return JSONResponse({"ok": False, "message": "视频资源缺失"}, status_code=404)
@@ -56,11 +55,9 @@ async def login_page(qq: str = "") -> HTMLResponse:
 @router.get("/api/servers")
 async def api_servers() -> JSONResponse:
     try:
-        servers = server_status.fetch_servers()
-    except Exception as e:  # noqa: BLE001
-        return JSONResponse(
-            {"ok": False, "message": f"区服列表拉取失败：{e}"}, status_code=502
-        )
+        servers = await server_status.fetch_servers()
+    except Exception as e:
+        return JSONResponse({"ok": False, "message": f"区服列表拉取失败：{e}"}, status_code=502)
 
     regions: dict[str, dict] = {}
     for sv in servers:
@@ -88,7 +85,8 @@ async def api_session(token: str) -> JSONResponse:
     """登录页换取会话信息：返回绑定的 QQ（用于页面展示）。"""
     sess = session.get_session(token)
     if sess is None:
-        return JSONResponse({"ok": False, "message": "会话不存在或已过期，请重新在 QQ 内发起绑定。"}, status_code=404)
+        msg = "会话不存在或已过期，请重新在 QQ 内发起绑定。"
+        return JSONResponse({"ok": False, "message": msg}, status_code=404)
     return JSONResponse({"ok": True, "qq": sess["qq"]})
 
 
@@ -103,7 +101,8 @@ async def api_bind(request: Request) -> JSONResponse:
     # 通过一次性 token 定位 QQ 会话，避免 URL 暴露 QQ
     sess = session.get_session(token)
     if sess is None:
-        return JSONResponse({"ok": False, "message": "会话不存在或已过期，请重新在 QQ 内发起绑定。"})
+        msg = "会话不存在或已过期，请重新在 QQ 内发起绑定。"
+        return JSONResponse({"ok": False, "message": msg})
     qq = sess["qq"]
 
     if not _UID_RE.match(uid):
@@ -113,11 +112,11 @@ async def api_bind(request: Request) -> JSONResponse:
 
     # 校验：调用 le3-api 确认 UID + 区服有效，顺带取昵称
     try:
-        detail = le3api.get_user_detail(uid, le3_id, cookie=config.azurlane_cookie)
+        detail = await le3api.get_user_detail(uid, le3_id, cookie=config.azurlane_cookie)
         nickname = detail.get("user_info", {}).get("nickname") or ""
     except le3api.APIError as e:
         return JSONResponse({"ok": False, "message": str(e)})
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return JSONResponse({"ok": False, "message": f"查询失败：{e}"})
 
     save_binding(qq, Binding(uid=uid, server_id=le3_id, server_label=server_label))
@@ -138,6 +137,6 @@ async def api_bind_cb(t: str = "", nickname: str = "") -> JSONResponse:
                     "发送「指挥官」查询指挥官信息，发送「建造 10」查询最近建造记录。"
                 ),
             )
-        except Exception:  # noqa: BLE001  bot 未连接等，私聊通知失败不影响
+        except Exception:
             pass
     return JSONResponse({"ok": True})

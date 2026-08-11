@@ -21,13 +21,13 @@ class ServerStatusError(Exception):
     """区服状态拉取失败。"""
 
 
-def fetch_servers(timeout: float = 10) -> list[dict]:
+async def fetch_servers(timeout: float = 10) -> list[dict]:
     """拉取全部地区服务器明细，返回规范化的 [{key, name, id, status}] 列表。
 
     id 为游戏协议纯序号；cn_channel 标记 unsupported。
     """
-    with httpx.Client(timeout=timeout, trust_env=False) as client:
-        resp = client.get(STATUS_API)
+    async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
+        resp = await client.get(STATUS_API)
     resp.raise_for_status()
     data = resp.json()
     regions = data.get("regions") or []

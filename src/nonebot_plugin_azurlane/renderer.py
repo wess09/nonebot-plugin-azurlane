@@ -10,21 +10,25 @@ from nonebot_plugin_htmlrender import render_html
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 # 项目根目录下的 data/blhx_logo.webp（碧蓝航线官方 logo，页眉用）
-LOGO_PATH = Path(__file__).parent.parent.parent.parent / "data" / "blhx_logo.webp"
+LOGO_PATH = Path(__file__).parent.parent.parent / "data" / "blhx_logo.webp"
 _MASCOT_PATHS = tuple(
-    Path(__file__).parent.parent.parent.parent / "data" / "mascots" / name
+    Path(__file__).parent.parent.parent / "data" / "mascots" / name
     for name in ("ship_girl_1.png", "ship_girl_2.png", "ship_girl_3.png")
+)
+_COLLECTION_MASCOT_PATHS = tuple(
+    Path(__file__).parent.parent.parent / "data" / "mascots" / name
+    for name in ("akashi_chibi.png", "laffey_chibi.png", "ayanami_chibi.png")
 )
 # 碧蓝航线游戏内字体（来自 data/ 目录）
 _FONTS = {
     # 标题粗黑体
-    "MStiffHei": Path(__file__).parent.parent.parent.parent / "data" / "MStiffHei.ttf",
+    "MStiffHei": Path(__file__).parent.parent.parent / "data" / "MStiffHei.ttf",
     # 界面正文
-    "SourceHanSans": Path(__file__).parent.parent.parent.parent / "data" / "SourceHanSans.ttf",
+    "SourceHanSans": Path(__file__).parent.parent.parent / "data" / "SourceHanSans.ttf",
     # 艺术宋体标题
-    "FZCYSK": Path(__file__).parent.parent.parent.parent / "data" / "FZCYSK.ttf",
+    "FZCYSK": Path(__file__).parent.parent.parent / "data" / "FZCYSK.ttf",
     # 西文数字/英文标语
-    "Agency": Path(__file__).parent.parent.parent.parent / "data" / "agency.ttf",
+    "Agency": Path(__file__).parent.parent.parent / "data" / "agency.ttf",
 }
 
 
@@ -133,6 +137,9 @@ async def build_commanders_pic(detail: dict) -> bytes:
         "mascot_1": _image_data_uri(_MASCOT_PATHS[0], "image/png"),
         "mascot_2": _image_data_uri(_MASCOT_PATHS[1], "image/png"),
         "mascot_3": _image_data_uri(_MASCOT_PATHS[2], "image/png"),
+        "collection_mascot_1": _image_data_uri(_COLLECTION_MASCOT_PATHS[0], "image/png"),
+        "collection_mascot_2": _image_data_uri(_COLLECTION_MASCOT_PATHS[1], "image/png"),
+        "collection_mascot_3": _image_data_uri(_COLLECTION_MASCOT_PATHS[2], "image/png"),
         "avatar": ui.get("avatar") or "",
         "nickname": ui.get("nickname") or "",
         "level": ui.get("level") or "",
@@ -159,8 +166,8 @@ async def build_commanders_pic(detail: dict) -> bytes:
         challenge_rows = "".join(
             f"""
             <div class="todo-row">
-              <span class="todo-name">{c.get('daily_challenge_name')}</span>
-              <span class="todo-badge">剩 {c.get('daily_challenge_remaining_attempts')} 次</span>
+              <span class="todo-name">{c.get("daily_challenge_name")}</span>
+              <span class="todo-badge">剩 {c.get("daily_challenge_remaining_attempts")} 次</span>
             </div>
             """
             for c in challenges
@@ -198,10 +205,10 @@ async def build_build_records_pic(result: dict) -> bytes:
         rows += f"""
         <div class="row">
           <span class="idx">{i}</span>
-          <img class="ship-icon" src="{rec.get('avatarIcon') or ''}" alt="" />
-          <span class="ship-name">{rec.get('roleName') or '-'}</span>
-          <span class="task">{rec.get('taskName') or '-'}</span>
-          <span class="rarity {_rarity_class(rarity)}">{rarity or '-'}</span>
+          <img class="ship-icon" src="{rec.get("avatarIcon") or ""}" alt="" />
+          <span class="ship-name">{rec.get("roleName") or "-"}</span>
+          <span class="task">{rec.get("taskName") or "-"}</span>
+          <span class="rarity {_rarity_class(rarity)}">{rarity or "-"}</span>
         </div>
         """
 

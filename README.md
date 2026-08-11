@@ -17,11 +17,19 @@
 2. 扫码打开登录页（URL 只带短 token，不暴露 QQ/回调信息），填写 UID 并选区服
 3. 绑定成功后前端跳回 bot 回调接口，bot 给 QQ 发私聊通知
 
-## 快速开始
+## 安装
+
+### 通过 NoneBot2 插件商店（NB-CLI）
+
+```bash
+nb plugin install nonebot-plugin-azurlane
+```
+
+### 从源码运行
 
 ```bash
 # 1. 安装依赖
-pip install -e ".[fastapi]"
+pip install -e .
 
 # 2. 安装渲染用 Chromium（如已通过 htmlrender 自动安装可跳过）
 python -m playwright install chromium
@@ -56,18 +64,21 @@ python bot.py
 ## 结构
 
 ```
-bot.py                      # NoneBot2 入口
-src/plugins/azurlane/
-  __init__.py               # 插件元信息 + CORS + Web 路由挂载
-  config.py                 # 插件配置
-  le3api.py                 # le3-api 客户端（请求伪装 / 错误处理 / 分页）
-  server_status.py          # 区服列表与 ID 换算
-  binding.py                # 绑定数据存储（uid + 区服 -> server_id）
-  session.py                # 一次性绑定会话（token -> qq/cb，10 分钟有效）
-  web.py                    # Web 登录页 / API（session / servers / bind / bind_cb）
-  commands.py               # 机器人指令（/指挥官 /建造 /绑定）
-  templates/                # HTML 面板模板 + 登录页
-static/login/               # CDN 部署的静态登录页（index.html + 视频 + 头像）
+bot.py                          # NoneBot2 入口
+src/nonebot_plugin_azurlane/
+  __init__.py                   # 插件元信息 + CORS + Web 路由挂载
+  config.py                     # 插件配置
+  le3api.py                     # le3-api 客户端（异步 / 请求伪装 / 分页）
+  server_status.py              # 区服列表与 ID 换算
+  binding.py                    # 绑定数据存储（SQLite + localstore）
+  session.py                    # 一次性绑定会话（token -> qq/cb，10 分钟有效）
+  web.py                        # Web 登录页 / API（session / servers / bind / bind_cb）
+  qr.py                         # 绑定二维码（圆角渐变 + 中心头像）
+  commands.py                   # 机器人指令（/指挥官 /建造 /绑定）
+  templates/                    # HTML 面板模板 + 登录页
+static/login/                   # CDN 部署的静态登录页（index.html + 视频 + 头像）
+tests/                          # pytest + nonebug 测试
+.github/workflows/              # CI / release
 ```
 
 ## 数据来源

@@ -10,11 +10,11 @@ from qrcode.image.styles.colormasks import HorizontalGradiantColorMask
 from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 
 # 头像文件：static/login_avatar.webp
-AVATAR_PATH = Path(__file__).parent.parent.parent.parent / "static" / "login_avatar.webp"
+AVATAR_PATH = Path(__file__).parent.parent.parent / "static" / "login_avatar.webp"
 
 # 渐变配色：天蓝 -> 海蓝
-_LEFT_COLOR = (74, 157, 232)   # #4a9de8
-_RIGHT_COLOR = (26, 95, 180)   # #1a5fb4
+_LEFT_COLOR = (74, 157, 232)  # #4a9de8
+_RIGHT_COLOR = (26, 95, 180)  # #1a5fb4
 
 
 def _round_logo(size: int) -> Image.Image:

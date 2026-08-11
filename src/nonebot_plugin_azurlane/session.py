@@ -3,8 +3,8 @@
 /绑定 指令生成短 token（10 分钟有效），登录 URL 只带 token，不暴露 QQ 与回调信息。
 """
 
-import secrets
 import time
+import secrets
 
 # token -> {"qq": str, "cb": str, "created": float}
 _sessions: dict[str, dict] = {}

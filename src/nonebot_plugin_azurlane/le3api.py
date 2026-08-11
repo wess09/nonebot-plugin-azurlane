@@ -39,17 +39,15 @@ def _envelope_check(data: dict) -> dict:
     return data.get("data") or {}
 
 
-def get_user_detail(
-    role_id: str, server_id: str, cookie: str | None = None
-) -> dict:
+async def get_user_detail(role_id: str, server_id: str, cookie: str | None = None) -> dict:
     """指挥官详情 get/user_detail。"""
     params = {
         "role_id": role_id,
         "server_id": server_id,
         "game_id": GAME_ID,
     }
-    with httpx.Client(timeout=_TIMEOUT, trust_env=False) as client:
-        resp = client.get(
+    async with httpx.AsyncClient(timeout=_TIMEOUT, trust_env=False) as client:
+        resp = await client.get(
             f"{BASE_URL}/get/user_detail",
             params=params,
             headers=_build_headers(cookie),
@@ -58,7 +56,7 @@ def get_user_detail(
     return _envelope_check(resp.json())
 
 
-def get_build_record(
+async def get_build_record(
     role_id: str,
     server_id: str,
     target_count: int = 10,
@@ -76,7 +74,7 @@ def get_build_record(
     nickname = uid = server_name = avatar = None
     total_count = 0
 
-    with httpx.Client(timeout=_TIMEOUT, trust_env=False) as client:
+    async with httpx.AsyncClient(timeout=_TIMEOUT, trust_env=False) as client:
         while remaining > 0:
             params = {
                 "role_id": role_id,
@@ -84,7 +82,7 @@ def get_build_record(
                 "page_num": str(page_num),
                 "page_size": str(page_size),
             }
-            resp = client.get(
+            resp = await client.get(
                 f"{BASE_URL}/get/build_record",
                 params=params,
                 headers=_build_headers(cookie),

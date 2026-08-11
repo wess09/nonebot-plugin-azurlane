@@ -7,11 +7,19 @@ venv/
 
 # 环境配置（含 Cookie 等敏感信息）
 .env
+.env.dev
 
 # 运行时数据（字体等资源仍提交，数据库/运行时产物忽略）
 data/*.db
 data/*.json
 data/*.log
+data/nonebot_plugin_*/
+
+# 测试产物
+.coverage
+htmlcov/
+junit.xml
+.pytest_cache/
 
 # 编辑器 / 系统
 .idea/

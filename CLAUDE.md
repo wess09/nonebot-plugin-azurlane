@@ -9,29 +9,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 常用命令
 
 ```bash
-python bot.py                  # 启动 bot（OneBot V11 正向 WS 连接 NapCat/go-cqhttp）
-python -m pip install -e ".[fastapi]"   # 安装依赖
-python -m playwright install chromium   # 安装渲染浏览器（国内用 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/ 加速）
+uv run python bot.py          # 启动 bot（uv 环境，OneBot V11 正向 WS 连接 NapCat/go-cqhttp）
+uv sync                       # 安装依赖（含 dev/test 组）
+uv run pytest tests/          # 运行测试
+uv run ruff check src/ tests/ # lint
+uv run ruff format src/ tests/# 格式化
+uv run python -m playwright install chromium   # 安装渲染浏览器（国内用 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/ 加速）
 ```
 
 ## 架构
 
 ```
 bot.py                 # 入口：nonebot.init -> 注册 OneBot 适配器 -> load_from_toml
-src/plugins/azurlane/
+src/nonebot_plugin_azurlane/
   __init__.py          # require htmlrender；加载时挂载 CORS + FastAPI 路由（必须在启动前，on_startup 里 add_middleware 会报 "Cannot add middleware after an application has started"）
   config.py            # AZURLANE_* 配置（Cookie、绑定页 URL、API 地址、管理员 QQ）
-  le3api.py            # le3-api 客户端：get/user_detail、get/build_record（分页）
+  le3api.py            # le3-api 客户端：get/user_detail、get/build_record（分页），httpx.AsyncClient（禁止同步）
   server_status.py     # 区服列表（server-checker.nanoda.work）+ 纯序号->le3_id 换算
-  binding.py           # QQ -> (uid, server_id) 绑定存储，SQLite 持久化 data/azurlane.db
+  binding.py           # QQ -> (uid, server_id) 绑定存储，SQLite 存于 localstore 数据目录
   session.py           # 一次性绑定会话：token -> {qq, cb}，纯内存 10 分钟过期
-  web.py               # FastAPI 路由：/login、/api/session/<token>、/api/servers、/api/bind、/api/bind_cb、/static/*
-  qr.py                # 绑定二维码：圆角码点 + 天蓝->海蓝水平渐变 + 中心圆形头像
+  web.py               # FastAPI 路由：/login、/api/session/<token>、/api/servers、/api/bind、/api/bind_cb、/static/*（全部 async）
+  qr.py                # 绑定二维码：圆角码点 + 天蓝->海蓝水平渐变 + 中心圆形头像（qrcode + Pillow）
   commands.py          # 指令：/指挥官、/建造、/绑定（发二维码）
   renderer.py          # 读 templates/*.html 替换占位符 -> htmlrender render_html -> bytes
   templates/           # commander.html / build_record.html / login.html
 static/login/          # CDN 部署的静态登录页副本（index.html + 视频 + 头像）
+tests/                 # pytest + nonebug（模板骨架，nonebug 中文消息对比在 Windows 有兼容问题，测试用加载 smoke test）
+.github/workflows/     # CI / release（uv + basedpyright + prek + typos）
 ```
+
+> 资源路径约定：包内 `Path(__file__).parent.parent.parent` = 项目根（`src/nonebot_plugin_azurlane/` 比原 `src/plugins/azurlane/` 少一层，迁移时已修正）。
+> Python 版本固定在 `.python-version` = 3.12（模板 CI 同）。
 
 ## 绑定流程
 
@@ -42,7 +50,7 @@ static/login/          # CDN 部署的静态登录页副本（index.html + 视�
 
 ## 关键约定
 
-- **le3-api 调用**（le3api.py）：必须带微信小程序 UA + Referer 伪装请求头；响应统一信封 `{code, message, data}`，`code != 0` 抛 `APIError`。**必须用 `httpx.Client(trust_env=False)`**——本机系统代理（127.0.0.1:7890）会劫持导致 TLS 失败。
+- **le3-api 调用**（le3api.py）：必须带微信小程序 UA + Referer 伪装请求头；响应统一信封 `{code, message, data}`，`code != 0` 抛 `APIError`。**必须用 `httpx.AsyncClient(trust_env=False)`**（异步 + 直连）——本机系统代理（127.0.0.1:7890）会劫持导致 TLS 失败；同步 `httpx.Client` 会阻塞事件循环，禁用。
 - **区服换算**：`AzurLaneServerStatus` 返回的服务器 `id` 是游戏协议纯序号，le3-api 需要 `100+id`（官网）/ `200+id`（iOS）；渠道服 `300+id` le3-api **无数据**，绑定需拒绝。换算在 `server_status.server_id_for()`。
 - **敏感信息**：区服、server_id **只存服务端**（binding.py），绝不出现在任何 QQ 回复、HTML 面板中。这是硬性要求。
 - **登录页静态化**：login.html 是纯静态自包含页面（QQ 从 URL `t` 参数经 /api/session 换取），可部署 CDN；`static/login/` 是它的副本。改模板后需 `cp src/plugins/azurlane/templates/login.html static/login/index.html` 同步。
@@ -54,4 +62,4 @@ static/login/          # CDN 部署的静态登录页副本（index.html + 视�
 - 一个 OneBot 11 实现（NapCat/go-cqhttp）监听 `ONEBOT_WS_URLS` 指定地址，否则 bot 启动后持续重连（正常现象）。
 - 8081 端口被本机另一进程（pywebio）占用，故 bot 用 8081 而非默认 8080。改端口需同步改 `.env`、`pyproject.toml`、`AZURLANE_BIND_BASE_URL`、`AZURLANE_API_BASE_URL`。
 - Chromium 手动装在 `C:\Users\AzurLane\AppData\Local\ms-playwright\chromium_headless_shell-1234\...`。
-- `data/azurlane.db`（SQLite）被 .gitignore 忽略，运行时自动创建；字体、static/、登录页资源会提交进仓库。
+- 绑定数据 SQLite 存于 nonebot-plugin-localstore 数据目录（`get_plugin_data_dir()/azurlane.db`），运行时自动创建；字体、static/、登录页资源已提交进仓库。

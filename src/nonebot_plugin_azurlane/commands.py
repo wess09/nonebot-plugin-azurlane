@@ -1,13 +1,13 @@
 """机器人指令：指挥官信息 / 建造记录查询。"""
 
 from nonebot import on_command
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent, Message, MessageSegment
 from nonebot.params import CommandArg
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageEvent, MessageSegment
 
 from . import le3api, session
-from .binding import get_binding
-from .config import config
 from .qr import make_bind_qr
+from .config import config
+from .binding import get_binding
 from .renderer import build_commanders_pic, build_build_records_pic
 
 commander_cmd = on_command("指挥官", aliases={"指挥官信息"}, priority=5, block=True)
@@ -22,12 +22,12 @@ async def handle_commander(bot: Bot, event: MessageEvent):
     if binding is None:
         await commander_cmd.finish("尚未绑定。发送「绑定」获取 Web 登录页完成绑定。")
     try:
-        detail = le3api.get_user_detail(
+        detail = await le3api.get_user_detail(
             binding.uid, binding.server_id, cookie=config.azurlane_cookie
         )
     except le3api.APIError as e:
         await commander_cmd.finish(f"查询失败：{e}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         await commander_cmd.finish(f"查询失败：{e}")
 
     pic = await build_commanders_pic(detail)
@@ -35,9 +35,7 @@ async def handle_commander(bot: Bot, event: MessageEvent):
 
 
 @build_cmd.handle()
-async def handle_build(
-    bot: Bot, event: MessageEvent, arg: Message = CommandArg()
-):
+async def handle_build(bot: Bot, event: MessageEvent, arg: Message = CommandArg()):
     qq = str(event.user_id)
     binding = get_binding(qq)
     if binding is None:
@@ -54,12 +52,12 @@ async def handle_build(
         await build_cmd.finish("单次最多查询 500 条建造记录。")
 
     try:
-        result = le3api.get_build_record(
+        result = await le3api.get_build_record(
             binding.uid, binding.server_id, target_count=count, cookie=config.azurlane_cookie
         )
     except le3api.APIError as e:
         await build_cmd.finish(f"查询失败：{e}")
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         await build_cmd.finish(f"查询失败：{e}")
 
     if not result["records"]:
@@ -81,6 +79,7 @@ async def handle_bind(bot: Bot, event: MessageEvent):
     img_bytes = make_bind_qr(url)
 
     await bind_cmd.finish(
-        MessageSegment.image(img_bytes)
-        + "\n【碧蓝航线 · 指挥官绑定】\n扫描上方二维码完成绑定（填写 UID 并选择区服）。\n提示：绑定信息仅用于查询，区服信息不会在查询结果中展示。"
+        MessageSegment.image(img_bytes) + "\n【碧蓝航线 · 指挥官绑定】"
+        "\n扫描上方二维码完成绑定（填写 UID 并选择区服）。"
+        "\n提示：绑定信息仅用于查询，区服信息不会在查询结果中展示。"
     )

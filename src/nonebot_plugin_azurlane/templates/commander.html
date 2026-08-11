@@ -179,6 +179,23 @@
   .rate .ring { display: block; margin-left: 48px; }
   .rate .ring .bg { fill: none; stroke: rgba(255, 255, 255, 0.22); stroke-width: 7; }
   .rate .ring .fg { fill: none; stroke: #7cc0ff; stroke-width: 7; filter: drop-shadow(0 0 5px rgba(124, 192, 255, 0.7)); }
+  .collection-mascots {
+    display: flex;
+    align-items: flex-end;
+    height: 90px;
+    margin-left: auto;
+    padding-right: 2px;
+  }
+  .collection-mascot {
+    width: auto;
+    height: 88px;
+    margin-left: -12px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
+  }
+  .collection-mascot:first-child { margin-left: 0; transform: translateY(4px) rotate(-3deg); }
+  .collection-mascot:nth-child(2) { transform: translateY(-2px); }
+  .collection-mascot:nth-child(3) { transform: translateY(3px) rotate(3deg); }
 
   /* 双列数据 */
   .kv-row { display: grid; grid-template-columns: 1fr 1fr; }
@@ -278,6 +295,11 @@
               <circle cx="45" cy="45" r="37" class="bg"></circle>
               <circle cx="45" cy="45" r="37" class="fg" stroke-dasharray="{{rate_circ}} {{rate_circ}}" stroke-dashoffset="{{rate_offset}}" transform="rotate(-90 45 45)"></circle>
             </svg>
+            <div class="collection-mascots" aria-hidden="true">
+              <img class="collection-mascot" src="{{collection_mascot_1}}" alt="" />
+              <img class="collection-mascot" src="{{collection_mascot_2}}" alt="" />
+              <img class="collection-mascot" src="{{collection_mascot_3}}" alt="" />
+            </div>
           </div>
         </div>
 

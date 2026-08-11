@@ -1,20 +1,22 @@
 from nonebot import get_driver
-from nonebot.plugin import PluginMetadata, require
 from nonebot.log import logger
+from nonebot.plugin import PluginMetadata, require
 
 require("nonebot_plugin_htmlrender")
 
-from . import commands  # noqa: E402  (注册指令)
-
-from .config import config  # noqa: E402
+# 注册指令（import 副作用），显式 re-export 避免 ruff F401
+from . import commands as commands
+from .config import config
 
 __plugin_meta__ = PluginMetadata(
     name="碧蓝航线查询",
     description="指挥官信息 / 建造记录查询，Web 界面登录绑定",
     usage="/指挥官\n/建造 [数量]\n/绑定",
     type="application",
-    homepage="https://github.com/example/azurlane-bot",
+    homepage="https://github.com/wess09/nonebot-plugin-azurlane",
     config=config.__class__,
+    supported_adapters={"~onebot.v11"},
+    extra={"author": "wess09 <wess09@users.noreply.github.com>"},
 )
 
 driver = get_driver()
@@ -34,6 +36,6 @@ try:
         allow_headers=["*"],
     )
     app.include_router(router)
-except Exception as e:  # noqa: BLE001
+except Exception as e:
     # 非 FastAPI 驱动时 Web 登录不可用，仅指令功能可用
     logger.warning(f"[azurlane] Web 登录路由挂载失败: {e!r}")

@@ -1,15 +1,17 @@
 """绑定数据存储：QQ 号 -> (uid, server_id, server_label)。
 
-用 SQLite 持久化到 data/azurlane.db。敏感信息（区服、server_id）仅存于服务端，
-不在任何查询回复/面板中展示。
+用 SQLite 持久化，数据目录由 nonebot-plugin-localstore 管理。
+敏感信息（区服、server_id）仅存于服务端，不在任何查询回复/面板中展示。
 """
 
-import os
 import sqlite3
 from dataclasses import dataclass
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "data")
-DB_PATH = os.path.join(DATA_DIR, "azurlane.db")
+from nonebot import require
+
+require("nonebot_plugin_localstore")
+
+from nonebot_plugin_localstore import get_plugin_data_dir
 
 
 @dataclass
@@ -25,8 +27,9 @@ _conn: sqlite3.Connection | None = None
 def _get_conn() -> sqlite3.Connection:
     global _conn
     if _conn is None:
-        os.makedirs(DATA_DIR, exist_ok=True)
-        _conn = sqlite3.connect(DB_PATH)
+        data_dir = get_plugin_data_dir()
+        data_dir.mkdir(parents=True, exist_ok=True)
+        _conn = sqlite3.connect(str(data_dir / "azurlane.db"))
         _conn.row_factory = sqlite3.Row
         _conn.execute(
             """
@@ -56,7 +59,8 @@ def save_binding(qq: str, binding: Binding) -> None:
 
 def get_binding(qq: str) -> Binding | None:
     conn = _get_conn()
-    row = conn.execute("SELECT uid, server_id, server_label FROM bindings WHERE qq=?", (qq,)).fetchone()
+    sql = "SELECT uid, server_id, server_label FROM bindings WHERE qq=?"
+    row = conn.execute(sql, (qq,)).fetchone()
     if row is None:
         return None
     return Binding(uid=row["uid"], server_id=row["server_id"], server_label=row["server_label"])
