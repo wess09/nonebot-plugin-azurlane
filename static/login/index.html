@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>碧蓝航线 · 绑定</title>
+    <style>
+      :root {
+        --text:      rgba(255, 255, 255, 0.96);
+        --text-dim:  rgba(255, 255, 255, 0.70);
+        --text-mute: rgba(255, 255, 255, 0.42);
+
+        --glass-top:    rgba(255, 255, 255, 0.16);
+        --glass-bot:    rgba(255, 255, 255, 0.06);
+        --glass-field:  rgba(255, 255, 255, 0.08);
+        --glass-strong: rgba(255, 255, 255, 0.22);
+        --edge:         rgba(255, 255, 255, 0.18);
+        --specular:     rgba(255, 255, 255, 0.35);
+
+        --accent: #7cc0ff;
+        --good:   #86e5a2;
+        --bad:    #ff9aa8;
+
+        --serif: 'Cormorant Garamond', serif;
+        --display: 'Fraunces', 'Cormorant Garamond', serif;
+        --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+                'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: var(--sans);
+        color: var(--text);
+        background: #000;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .stage {
+        position: fixed; inset: 0; z-index: -1; background: #000;
+      }
+      .stage video {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        filter: saturate(1.05) brightness(0.72);
+      }
+
+      main {
+        min-height: 100vh;
+        display: flex; align-items: center; justify-content: center;
+        padding: 40px 20px;
+      }
+
+      /* Liquid Glass 主卡片 —— 磨砂弱化 */
+      .card {
+        width: min(380px, 100%);
+        padding: 26px 26px 22px;
+        background: linear-gradient(180deg, var(--glass-top) 0%, var(--glass-bot) 100%);
+        backdrop-filter: blur(16px) saturate(150%);
+        -webkit-backdrop-filter: blur(16px) saturate(150%);
+        border: 1px solid var(--edge);
+        border-radius: 24px;
+        box-shadow:
+          0 16px 48px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 var(--specular),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      /* 品牌 —— 头像在左，文案在右 */
+      .brand {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .avatar {
+        flex-shrink: 0;
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--glass-strong);
+        border: 1px solid var(--edge);
+        box-shadow:
+          0 10px 26px rgba(0, 0, 0, 0.32),
+          inset 0 1px 0 var(--specular);
+      }
+      .avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+      .wordmark {
+        flex: 1; min-width: 0;
+        display: flex; flex-direction: column; justify-content: center;
+        gap: 8px;
+      }
+      .wordmark .brand-name {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 30px;
+        font-weight: 700;
+        font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 1;
+        letter-spacing: 0.06em;
+        line-height: 1;
+      }
+      .wordmark .brand-sub {
+        margin: 0;
+        font-size: 12.5px;
+        font-weight: 400;
+        color: var(--text-dim);
+        letter-spacing: 0.02em;
+        line-height: 1.3;
+      }
+      .wordmark .brand-sub .slash { color: var(--text-mute); margin: 0 5px; }
+      .wordmark .brand-sub .en {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 500;
+      }
+
+      /* 表单 */
+      .field { margin-bottom: 14px; }
+      .field label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-dim);
+        margin: 0 0 8px 4px;
+        font-weight: 500;
+      }
+
+      .input-wrap {
+        display: flex; align-items: stretch;
+        background: var(--glass-field);
+        border: 1px solid var(--edge);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      }
+      .input-wrap:focus-within {
+        border-color: rgba(124, 192, 255, 0.55);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 0 0 3px rgba(124, 192, 255, 0.15);
+      }
+      .input-wrap input {
+        flex: 1; min-width: 0;
+        padding: 13px 16px;
+        background: transparent;
+        border: none;
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 15px;
+      }
+      .input-wrap input:focus { outline: none; }
+      .input-wrap input::placeholder { color: var(--text-mute); }
+
+      .send-btn {
+        flex-shrink: 0;
+        padding: 0 16px;
+        background: transparent;
+        border: none;
+        color: var(--accent);
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+      .send-btn:hover:not(:disabled) { opacity: 0.7; }
+      .send-btn:disabled { color: var(--text-mute); cursor: not-allowed; }
+
+      /* 主按钮 —— 更亮的玻璃 */
+      .submit {
+        width: 100%;
+        margin-top: 12px;
+        padding: 14px;
+        border: 1px solid var(--edge);
+        border-radius: 14px;
+        background: linear-gradient(180deg,
+          rgba(255, 255, 255, 0.28) 0%,
+          rgba(255, 255, 255, 0.12) 100%);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        padding-left: calc(14px + 0.1em);
+        cursor: pointer;
+        box-shadow: inset 0 1px 0 var(--specular);
+        transition: background 0.2s, transform 0.1s;
+      }
+      .submit:hover:not(:disabled) {
+        background: linear-gradient(180deg,
+          rgba(255, 255, 255, 0.4) 0%,
+          rgba(255, 255, 255, 0.2) 100%);
+      }
+      .submit:active:not(:disabled) { transform: translateY(1px); }
+      .submit:disabled {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-mute);
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .status {
+        margin-top: 14px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(16px);
+        display: none;
+      }
+      .status.show { display: block; }
+      .status.ok { color: var(--good); }
+      .status.fail { color: var(--bad); }
+
+      /* 自定义下拉 —— 玻璃触发器 + 浮层面板 */
+      .select-box { position: relative; }
+      .select-trigger {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 13px 16px;
+        background: var(--glass-field);
+        border: 1px solid var(--edge);
+        border-radius: 14px;
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 15px;
+        cursor: pointer;
+        user-select: none;
+        transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      }
+      .select-trigger.placeholder { color: var(--text-mute); }
+      .select-trigger:hover { background: rgba(255, 255, 255, 0.11); }
+      .select-trigger.open {
+        border-color: rgba(124, 192, 255, 0.55);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 0 0 3px rgba(124, 192, 255, 0.15);
+      }
+      .select-trigger .caret {
+        width: 0; height: 0;
+        margin-left: 10px;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid var(--text-dim);
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+      .select-trigger.open .caret { transform: rotate(180deg); border-top-color: var(--accent); }
+      .select-trigger.disabled { opacity: 0.55; cursor: not-allowed; }
+
+      .select-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0; right: 0;
+        max-height: 260px;
+        overflow-y: auto;
+        background: rgba(8, 12, 20, 0.78);
+        backdrop-filter: blur(24px) saturate(160%);
+        -webkit-backdrop-filter: blur(24px) saturate(160%);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        z-index: 30;
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+        transform-origin: top center;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+      }
+      .select-menu.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        visibility: visible;
+        pointer-events: auto;
+      }
+      .select-menu::-webkit-scrollbar { width: 4px; }
+      .select-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+      .select-menu .optgroup-label {
+        padding: 10px 14px 4px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 1px;
+        font-weight: 500;
+      }
+      .select-menu .opt {
+        padding: 10px 16px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: space-between;
+        transition: background 0.15s;
+      }
+      .select-menu .opt:hover { background: rgba(255, 255, 255, 0.08); }
+      .select-menu .opt.selected {
+        color: var(--accent);
+        background: rgba(124, 192, 255, 0.12);
+      }
+      .select-menu .opt .tag {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+      }
+
+      .footer {
+        margin-top: 22px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-mute);
+        line-height: 1.7;
+      }
+      .footer code {
+        font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+        font-size: 11px;
+        color: var(--text-dim);
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <video autoplay muted loop playsinline preload="auto" src="./login_bg.mp4"></video>
+    </div>
+
+    <main>
+      <section class="card">
+        <header class="brand">
+          <div class="avatar">
+            <img src="./login_avatar.webp" alt="AzurLane" />
+          </div>
+          <div class="wordmark">
+            <p class="brand-name">AzurLane</p>
+            <p class="brand-sub">碧蓝航线<span class="slash">/</span><span class="en">Azur Lane</span></p>
+          </div>
+        </header>
+
+        <form onsubmit="return false">
+          <div class="field">
+            <label for="uid">游戏 UID</label>
+            <div class="input-wrap">
+              <input id="uid" type="tel" inputmode="numeric" maxlength="12"
+                     placeholder="请输入游戏内 UID" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="server">区服</label>
+            <div class="select-box" id="serverBox">
+              <div class="select-trigger placeholder disabled" id="serverTrigger">
+                <span id="serverValue">加载中…</span>
+                <span class="caret"></span>
+              </div>
+              <div class="select-menu" id="serverMenu"></div>
+            </div>
+          </div>
+
+          <button id="bindBtn" class="submit" type="submit" disabled>完成绑定</button>
+
+          <div class="status" id="status"></div>
+        </form>
+
+        <p class="footer">
+          绑定 QQ <code id="qqTag">-</code> · 区服信息仅用于查询，不会公开展示
+        </p>
+      </section>
+    </main>
+
+    <script>
+      // ===== 部署配置（CDN 部署时改这里） =====
+      // bot 服务公网地址：区服列表与绑定接口都在此地址下
+      const API_BASE = '';
+      // 如果资源（视频/头像）与页面不在同一路径，可改这里；留空则使用页面同目录相对路径
+      const ASSET_BASE = '';
+      // ========================================
+
+      // 一次性会话 token 从 URL 读取（?t=xxx），用于换取 QQ 并完成绑定/回调
+      const TOKEN = new URLSearchParams(location.search).get('t') || '';
+      const $ = (id) => document.getElementById(id);
+      const uid = $('uid');
+      const serverBox = $('serverBox');
+      const serverTrigger = $('serverTrigger');
+      const serverValue = $('serverValue');
+      const serverMenu = $('serverMenu');
+      const bindBtn = $('bindBtn');
+      const statusEl = $('status');
+      const qqTag = $('qqTag');
+
+      const api = (path) => API_BASE + path;
+      const asset = (path) => ASSET_BASE + path;
+
+      let QQ = '';
+      let serverMap = {}; // le3_id -> {region, label}
+      let selectedId = '';
+
+      function showStatus(msg, ok) {
+        statusEl.textContent = msg;
+        statusEl.className = `status show ${ok ? 'ok' : 'fail'}`;
+      }
+
+      // 解析 URL：带 token 则向服务端换取会话（QQ）；兼容旧版 ?qq= 直传
+      (async () => {
+        const urlQQ = new URLSearchParams(location.search).get('qq') || '';
+        if (urlQQ && /^\d{5,15}$/.test(urlQQ)) {
+          QQ = urlQQ;
+          qqTag.textContent = QQ;
+        } else if (TOKEN) {
+          try {
+            const res = await fetch(api('/api/session/' + encodeURIComponent(TOKEN)));
+            const data = await res.json();
+            if (data.ok && data.qq) {
+              QQ = data.qq;
+              qqTag.textContent = QQ;
+            } else {
+              return deny('会话已过期，请重新在 QQ 内发送「绑定」。');
+            }
+          } catch (e) {
+            return deny('无法连接服务端，请稍后重试。');
+          }
+        } else {
+          return deny('链接缺少会话信息。请先在 QQ 内发送「绑定」获取登录二维码。');
+        }
+        serverTrigger.classList.remove('disabled');
+        serverTrigger.classList.add('placeholder');
+        serverValue.textContent = '请选择区服';
+        loadServers();
+      })();
+
+      function deny(msg) {
+        uid.disabled = true;
+        serverTrigger.classList.add('disabled');
+        serverValue.textContent = '无法绑定';
+        bindBtn.disabled = true;
+        qqTag.textContent = '-';
+        showStatus(msg, false);
+      }
+
+      function onlyDigits(el, max) {
+        el.addEventListener('input', () => {
+          const cleaned = el.value.replace(/\D/g, '').slice(0, max);
+          if (cleaned !== el.value) el.value = cleaned;
+          validate();
+        });
+      }
+
+      function validate() {
+        const uidOk = /^\d{3,12}$/.test(uid.value);
+        const serverOk = selectedId !== '';
+        bindBtn.disabled = !(uidOk && serverOk);
+      }
+
+      onlyDigits(uid, 12);
+
+      // 自定义下拉开关
+      function toggleMenu(open) {
+        const willOpen = open === undefined ? !serverMenu.classList.contains('open') : open;
+        serverMenu.classList.toggle('open', willOpen);
+        serverTrigger.classList.toggle('open', willOpen);
+      }
+      serverTrigger.addEventListener('click', () => {
+        if (serverTrigger.classList.contains('disabled')) return;
+        toggleMenu();
+      });
+      document.addEventListener('click', (e) => {
+        if (!serverBox.contains(e.target)) toggleMenu(false);
+      });
+
+      // 加载区服列表
+      async function loadServers() {
+        try {
+          const res = await fetch(api('/api/servers'));
+          const data = await res.json();
+          if (!data.ok) { showStatus(data.message || '区服列表加载失败', false); return; }
+          const regions = data.regions || [];
+          serverMenu.innerHTML = '';
+          for (const region of regions) {
+            const gl = document.createElement('div');
+            gl.className = 'optgroup-label';
+            gl.textContent = region.name;
+            serverMenu.appendChild(gl);
+            for (const sv of region.servers) {
+              const opt = document.createElement('div');
+              opt.className = 'opt';
+              opt.dataset.id = sv.le3_id;
+              const statusText = { maintenance: '维护', full: '爆满', reg_full: '繁忙', unopened: '未开' }[sv.status] || '';
+              const nameSpan = document.createElement('span');
+              nameSpan.textContent = sv.name;
+              opt.appendChild(nameSpan);
+              if (statusText) {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.textContent = statusText;
+                opt.appendChild(tag);
+              }
+              opt.addEventListener('click', () => {
+                selectedId = sv.le3_id;
+                serverMap[selectedId] = { region: region.name, label: sv.name };
+                serverValue.textContent = sv.name;
+                serverTrigger.classList.remove('placeholder');
+                serverMenu.querySelectorAll('.opt').forEach((o) =>
+                  o.classList.toggle('selected', o.dataset.id === selectedId));
+                toggleMenu(false);
+                validate();
+              });
+              serverMenu.appendChild(opt);
+            }
+          }
+        } catch (e) {
+          showStatus('区服列表加载失败，请稍后重试', false);
+        }
+      }
+
+      bindBtn.addEventListener('click', async () => {
+        bindBtn.disabled = true;
+        const origin = bindBtn.textContent;
+        bindBtn.textContent = '验证中';
+        const le3_id = selectedId;
+        const meta = serverMap[le3_id] || {};
+        const reply = await fetch(api('/api/bind'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: TOKEN,
+            uid: uid.value.trim(),
+            le3_id,
+            server_label: `${meta.region || ''} ${meta.label || ''}`.trim()
+          }),
+        }).then((r) => r.json());
+        if (reply.ok) {
+          uid.disabled = true;
+          serverTrigger.classList.add('disabled');
+          bindBtn.textContent = '绑定成功';
+          showStatus(`绑定成功！指挥官 ${reply.nickname || ''} 的绑定信息已生效。`, true);
+          // 回跳 bot 回调接口（带 token 与昵称），由 bot 补发私聊通知
+          const cbBase = api('/api/bind_cb');
+          const sep = cbBase.includes('?') ? '&' : '?';
+          setTimeout(() => {
+            location.href = `${cbBase}${sep}t=${encodeURIComponent(TOKEN)}&nickname=${encodeURIComponent(reply.nickname || '')}`;
+          }, 800);
+          return;
+        }
+        bindBtn.textContent = origin;
+        validate();
+        showStatus(reply.message || '绑定失败', false);
+      });
+
+      validate();
+    </script>
+  </body>
+</html>

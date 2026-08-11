@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# 环境配置（含 Cookie 等敏感信息）
+.env
+
+# 运行时数据（字体等资源仍提交，数据库/运行时产物忽略）
+data/*.db
+data/*.json
+data/*.log
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store

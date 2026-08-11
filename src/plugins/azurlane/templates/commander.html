@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "SourceHanSans", "Microsoft YaHei", "PingFang SC", sans-serif;
+    width: 540px;
+    padding: 0;
+    background: transparent;
+  }
+
+  /* 毛玻璃背景：立绘模糊 + 深蓝海军底色 */
+  .page {
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(165deg, #1a3a6b 0%, #0f2a52 45%, #0a1e3d 100%);
+  }
+  .bg-blur {
+    position: absolute;
+    inset: -40px;
+    z-index: 0;
+    background-size: cover;
+    background-position: center 30%;
+    filter: blur(22px) saturate(1.2);
+    opacity: 0.5;
+  }
+  .bg-tint {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(10, 25, 50, 0.35) 0%, rgba(8, 20, 40, 0.55) 100%);
+  }
+  .content {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ===== 顶部标题 ===== */
+  .masthead {
+    padding: 12px 18px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .brand img { height: 26px; width: auto; display: block; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4)); }
+  .mascots { display: flex; align-items: flex-end; height: 38px; padding-right: 2px; }
+  .mascot {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    margin-left: -7px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.28));
+  }
+  .mascot:first-child { margin-left: 0; transform: translateY(1px) rotate(-4deg); }
+  .mascot:nth-child(2) { transform: translateY(-2px); }
+  .mascot:nth-child(3) { transform: translateY(1px) rotate(4deg); }
+
+  /* ===== 头部信息（毛玻璃） ===== */
+  .hero {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 14px 16px 0;
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+  }
+  .avatar-wrap { position: relative; width: 66px; height: 66px; flex-shrink: 0; }
+  .avatar {
+    width: 66px; height: 66px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  }
+  .ident { flex: 1; }
+  .name { display: flex; align-items: baseline; gap: 10px; }
+  .nickname {
+    font-size: 24px;
+    font-weight: 800;
+    font-family: "MStiffHei", "Microsoft YaHei", sans-serif;
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  .lv {
+    font-size: 12px;
+    font-family: "Agency", "Impact", sans-serif;
+    color: #bfe0ff;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 4px;
+    padding: 1px 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  .guild {
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: rgba(230, 240, 255, 0.75);
+    letter-spacing: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  .guild b { color: #ffffff; font-weight: 600; }
+
+  /* ===== 主体 ===== */
+  .main { padding: 12px 16px 6px; display: flex; flex-direction: column; gap: 10px; }
+
+  .card {
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 13px 15px;
+  }
+  .sec {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: "MStiffHei", "Microsoft YaHei", "PingFang SC", sans-serif;
+    letter-spacing: 3px;
+    color: #ffffff;
+    margin-bottom: 11px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  }
+  .sec::before {
+    content: "";
+    width: 4px; height: 14px;
+    background: #7cc0ff;
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(124, 192, 255, 0.6);
+  }
+
+  /* 三列数字 */
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .t-item { text-align: center; padding: 9px 4px 7px; }
+  .t-item + .t-item { border-left: 1px solid rgba(255, 255, 255, 0.14); }
+  .t-item .n {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: "Agency", "Impact", sans-serif;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  .t-item .l { font-size: 11px; color: rgba(215, 232, 255, 0.7); margin-top: 7px; letter-spacing: 2px; }
+  .t-item .n.hot { color: #ffd76a; }
+
+  /* 资源 */
+  .res-blocks { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .res { text-align: center; padding: 5px 4px; }
+  .res + .res { border-left: 1px solid rgba(255, 255, 255, 0.14); }
+  .res .rl { font-size: 11px; color: rgba(215, 232, 255, 0.7); letter-spacing: 3px; }
+  .res .rv {
+    font-size: 20px;
+    font-weight: 800;
+    font-family: "Agency", "Impact", sans-serif;
+    color: #ffffff;
+    margin-top: 5px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  /* 收集率 */
+  .rate { display: flex; align-items: center; }
+  .rate .rv { font-size: 32px; font-weight: 800; font-family: "Agency", "Impact", sans-serif; color: #ffffff; font-variant-numeric: tabular-nums; flex-shrink: 0; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); }
+  .rate .ring { display: block; margin-left: 48px; }
+  .rate .ring .bg { fill: none; stroke: rgba(255, 255, 255, 0.22); stroke-width: 7; }
+  .rate .ring .fg { fill: none; stroke: #7cc0ff; stroke-width: 7; filter: drop-shadow(0 0 5px rgba(124, 192, 255, 0.7)); }
+
+  /* 双列数据 */
+  .kv-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .kv-col { display: flex; flex-direction: column; gap: 4px; padding: 6px 2px; }
+  .kv-col + .kv-col { border-left: 1px solid rgba(255, 255, 255, 0.14); padding-left: 18px; }
+  .kv-col .k { font-size: 11px; color: rgba(215, 232, 255, 0.7); letter-spacing: 2px; }
+  .kv-col .v { font-size: 18px; font-weight: 800; font-family: "Agency", "Impact", sans-serif; color: #ffffff; font-variant-numeric: tabular-nums; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+  .kv-col .v small { font-size: 12px; font-weight: 600; color: rgba(215, 232, 255, 0.7); }
+
+  /* 待办 */
+  .todo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13.5px;
+  }
+  .todo-row:last-child { border-bottom: none; }
+  .todo-name { color: #eaf3ff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+  .todo-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(124, 192, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 5px;
+    padding: 2px 9px;
+    letter-spacing: 0.5px;
+  }
+  .todo-done { color: rgba(215, 232, 255, 0.7); font-size: 13px; }
+
+  /* 演习 */
+  .ex-card { display: flex; align-items: center; justify-content: center; min-height: 76px; }
+  .ex-info { text-align: center; }
+  .ex-info .n {
+    font-size: 30px;
+    font-weight: 800;
+    font-family: "Agency", "Impact", sans-serif;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    line-height: 1;
+  }
+  .ex-info .l { font-size: 11px; color: rgba(215, 232, 255, 0.7); margin-top: 7px; letter-spacing: 3px; }
+
+  .foot {
+    padding: 11px 18px 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 6px;
+  }
+  .foot .l { font-size: 11px; font-family: "Agency", sans-serif; color: rgba(215, 232, 255, 0.45); letter-spacing: 2px; }
+  .foot .r { font-size: 10px; color: rgba(215, 232, 255, 0.35); font-family: "Consolas", monospace; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="bg-blur" style="background-image: url('{{avatar}}');"></div>
+    <div class="bg-tint"></div>
+
+    <div class="content">
+      <div class="masthead">
+        <span class="brand"><img src="{{logo}}" alt="" /></span>
+        <div class="mascots" aria-hidden="true">
+          <img class="mascot" src="{{mascot_1}}" alt="" />
+          <img class="mascot" src="{{mascot_2}}" alt="" />
+          <img class="mascot" src="{{mascot_3}}" alt="" />
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="avatar-wrap"><img class="avatar" src="{{avatar}}" alt="" /></div>
+        <div class="ident">
+          <div class="name"><span class="nickname">{{nickname}}</span><span class="lv">Lv.{{level}}</span></div>
+          <div class="guild">所属舰队 — <b>{{guild_name}}</b></div>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="card">
+          <div class="sec">港区资源</div>
+          <div class="res-blocks">
+            <div class="res"><div class="rl">物资</div><div class="rv">{{coins}}</div></div>
+            <div class="res"><div class="rl">石油</div><div class="rv">{{oil}}</div></div>
+            <div class="res"><div class="rl">存粮</div><div class="rv">{{food}}</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec">收集进度</div>
+          <div class="rate">
+            <span class="rv">{{collection_rate}}</span>
+            <svg class="ring" width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="37" class="bg"></circle>
+              <circle cx="45" cy="45" r="37" class="fg" stroke-dasharray="{{rate_circ}} {{rate_circ}}" stroke-dashoffset="{{rate_offset}}" transform="rotate(-90 45 45)"></circle>
+            </svg>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec">今日待办</div>
+          {{challenges}}
+        </div>
+
+        <div class="card">
+          <div class="sec">作战状态</div>
+          <div class="kv-row">
+            <div class="kv-col">
+              <div class="k">主线进度</div>
+              <div class="v">{{mainline_progress}}</div>
+            </div>
+            <div class="kv-col">
+              <div class="k">演习完成</div>
+              <div class="v">{{exercise_done}}<small> / {{exercise_max}}</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec">今日演习</div>
+          <div class="ex-card">
+            <div class="ex-info">
+              <div class="n">{{exercise_remaining}}</div>
+              <div class="l">今日剩余</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec">委托 / 科研</div>
+          <div class="trio">
+            <div class="t-item"><div class="n hot">{{comm_in_progress}}</div><div class="l">委托进行中</div></div>
+            <div class="t-item"><div class="n">{{comm_idle}}</div><div class="l">委托闲置</div></div>
+            <div class="t-item"><div class="n">{{comm_completed}}</div><div class="l">委托完成</div></div>
+          </div>
+          <div class="trio" style="margin-top: 2px;">
+            <div class="t-item"><div class="n hot">{{research_in_progress}}</div><div class="l">科研进行中</div></div>
+            <div class="t-item"><div class="n">{{research_idle}}</div><div class="l">科研闲置</div></div>
+            <div class="t-item"><div class="n">{{research_completed}}</div><div class="l">科研完成</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <span class="l">AZURLANE FLEET COMMAND</span>
+        <span class="r">DATA · LE3-API</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
