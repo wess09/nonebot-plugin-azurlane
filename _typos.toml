@@ -1,0 +1,3 @@
+# typos 误报豁免：qrcode 库 API 本名即为 HorizontalGradiantColorMask（官方拼写 Gradiant）
+[default]
+extend-ignore-identifiers-re = ["^HorizontalGradiantColorMask$"]
