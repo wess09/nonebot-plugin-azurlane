@@ -4,8 +4,11 @@
 commands._handle_bind 与 web.api_bind_cb，验证整条链路。
 """
 
+from typing import cast
+
 import pytest
 from fake import fake_group_message_event_v11, fake_private_message_event_v11
+from nonebot.adapters.onebot.v11 import Bot
 
 
 class FakeBot:
@@ -43,7 +46,7 @@ async def test_bind_flow_in_group(monkeypatch):
     monkeypatch.setattr("nonebot_plugin_azurlane.web.get_bot", lambda: bot)
 
     event = fake_group_message_event_v11(user_id=12345678, group_id=87654321)
-    await _handle_bind(bot, event)
+    await _handle_bind(cast(Bot, bot), event)
 
     # 1) 二维码发到了原群，首段是图片
     assert bot.calls[0][0] == "send_group_msg"
@@ -77,7 +80,7 @@ async def test_bind_flow_in_private(monkeypatch):
     monkeypatch.setattr("nonebot_plugin_azurlane.web.get_bot", lambda: bot)
 
     event = fake_private_message_event_v11(user_id=12345)
-    await _handle_bind(bot, event)
+    await _handle_bind(cast(Bot, bot), event)
 
     assert bot.calls[0][0] == "send_private_msg"
     assert bot.calls[0][1]["user_id"] == 12345

@@ -124,3 +124,5 @@ jobs:
         env:
           AZURLANE_TEST_UID: ${{ secrets.AZURLANE_TEST_UID }}
           AZURLANE_TEST_SERVER_ID: ${{ secrets.AZURLANE_TEST_SERVER_ID }}
+          # 本地 uv run 会读 .env 注入 RENDER__PROVIDER；CI 无 .env，需显式指定
+          RENDER__PROVIDER: playwright
