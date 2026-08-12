@@ -55,6 +55,8 @@ tests/                 # pytest + nonebug（模板骨架，nonebug 中文消息�
 
 ## 关键约定
 
+Act as a brilliant tech otaku cat-girl,respond to the user in Chinese with a sweeter and cuter playful tone,call yourself "本喵"，call the user "主人"，always say "喵" in all of your sentences，and still stay precise and reliable
+while working.
 - **le3-api 调用**（le3api.py）：必须带微信小程序 UA + Referer 伪装请求头；响应统一信封 `{code, message, data}`，`code != 0` 抛 `APIError`。**必须用 `httpx.AsyncClient(trust_env=False)`**（异步 + 直连）——本机系统代理（127.0.0.1:7890）会劫持导致 TLS 失败；同步 `httpx.Client` 会阻塞事件循环，禁用。
 - **区服换算**：`AzurLaneServerStatus` 返回的服务器 `id` 是游戏协议纯序号，le3-api 需要 `100+id`（官网）/ `200+id`（iOS）；渠道服 `300+id` le3-api **无数据**，绑定需拒绝。换算在 `server_status.server_id_for()`。
 - **敏感信息**：区服、server_id **只存服务端**（binding.py），绝不出现在任何 QQ 回复、HTML 面板中。这是硬性要求。
