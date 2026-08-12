@@ -41,6 +41,9 @@ jobs:
           if ! curl -fsS "https://pypi.org/pypi/nonebot-plugin-azurlane/${{ steps.version.outputs.TAG_VERSION }}/json" > /dev/null 2>&1; then
             uv publish
           fi
+        env:
+          # 用 PyPI token 认证（仓库迁移改名后 trusted publishing claims 不匹配）
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
 
       - name: Create Release and Upload Assets
         run: gh release create --generate-notes ${{ steps.version.outputs.TAG_NAME }} dist/*.tar.gz dist/*.whl
