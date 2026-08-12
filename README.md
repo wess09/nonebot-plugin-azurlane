@@ -11,14 +11,14 @@
 
 </div>
 
-碧蓝航线（AzurLane）NoneBot2 查询插件。对接 B 站碧蓝航线微信小程序后端 `le3-api`（逆向 + 模拟调用，接口约定见 [API.md](API.md)），面板用 [nonebot-plugin-htmlrender](https://github.com/kexue-z/nonebot-plugin-htmlrender) 渲染成图片发送。
+喵呜~ 欢迎指挥官!这里是 **nonebot-plugin-azurlane**,一只专属于您的碧蓝航线查询小助手喵。在 QQ 里喊本喵一声,就能查到指挥官信息、建造记录,绑定后随时一键查询,所有结果都会渲染成漂漂亮亮的图片面板送给指挥官喵~
 
 > [!IMPORTANT]
-> 查询结果**不展示区服**等敏感信息，区服仅用于服务端换算 `server_id`。
+> 指挥官请放心,查询结果**不会展示**区服等敏感信息喵!
 
 ## 🎉 功能 / 指令
 
-统一入口 `/blhx`，后接子命令：
+喵,统一入口是 `/blhx`,后面跟上子命令就阔以啦喵:
 
 | 指令 | 功能 |
 | --- | --- |
@@ -52,7 +52,7 @@ plugins = ["nonebot_plugin_azurlane"]
 ```bash
 git clone https://github.com/wess09/nonebot-plugin-azurlane.git
 cd nonebot-plugin-azurlane
-uv sync            # 安装依赖（含 dev/test 组）
+uv sync            # 安装依赖
 python bot.py      # 启动
 ```
 
@@ -79,7 +79,7 @@ AZURLANE_BIND_BASE_URL = http://127.0.0.1:8081
 # bot 服务公网地址（绑定回调跳转目标；CDN 部署时改为 bot 公网地址）
 AZURLANE_API_BASE_URL = http://127.0.0.1:8081
 
-# le3-api 可选 Cookie（部分接口不带可能拿不到数据）
+# 可选 Cookie（部分接口不带可能拿不到数据）
 AZURLANE_COOKIE =
 
 # htmlrender 渲染配置：本机 Chromium/Edge 可执行文件路径
@@ -97,95 +97,27 @@ AZURLANE_ADMIN_QQ =
 <details>
 <summary>渲染字体（重要）</summary>
 
-面板通过 `@font-face` 用 `local()` 引用**系统字体**（不内嵌 base64），渲染前需把字体安装到系统（Windows：`C:\Windows\Fonts`）：
+图片面板需要用到下面这些**系统字体**,渲染前记得安装到系统哦(Windows: `C:\Windows\Fonts`)喵:
 
-| 面板字体名 | 期望的系统字体 | 用途 |
-| --- | --- | --- |
-| `SourceHanSans` | `Source Han Sans CN` / `SC` / `TC` / `思源黑体` | 正文 |
-| `MStiffHei` | `MStiffHei PRC` / `MStiffHei` | 标题 |
-| `Agency` | `Agency FB` | 数字 / 英文标语 |
-
-> `local()` 按候选逐个匹配系统注册的字体名，都不命中则 fallback 系统默认字体。
+| 字体 | 用途 |
+| --- | --- |
+| `Source Han Sans CN` / `思源黑体` | 正文 |
+| `MStiffHei PRC` | 标题 |
+| `Agency FB` | 数字 / 英文标语 |
 
 </details>
 
 <details>
 <summary>登录页部署到 CDN</summary>
 
-登录页是纯静态自包含页面，可部署到 CDN 加速分发（包内 `src/nonebot_plugin_azurlane/static/login/` 目录：index.html + login_avatar.webp + login_bg.mp4）：
-
+- 将包内 `static/login/` 目录（index.html + login_avatar.webp + login_bg.mp4）上传至 CDN
 - `AZURLANE_BIND_BASE_URL` 设为 CDN 页面地址（`/绑定` 二维码指向它）
-- `AZURLANE_API_BASE_URL` 设为 bot 公网地址（登录页绑定接口与回调跳转目标）
-- 部署的 `index.html` 顶部 `const API_BASE = ''` 改为 bot 公网地址（页面与 bot 不同源时）
-- bot 已开放 CORS（`allow_origins=["*"]`），支持跨域调用 `/api/*`
-- 页面无 token 时提示"请先在 QQ 内发起绑定"，防止直接访问滥用
+- `AZURLANE_API_BASE_URL` 设为 bot 公网地址
+- 若页面与 bot 不同源，把 `index.html` 顶部的 `const API_BASE = ''` 改为 bot 公网地址
 
 </details>
-
-## 🔧 开发
-
-<details>
-<summary>测试与检查</summary>
-
-```bash
-uv run pytest tests/          # 运行测试
-uv run ruff check src/ tests/ # lint
-uv run ruff format src/ tests/ # 格式化
-uvx basedpyright              # 静态类型检查
-```
-
-</details>
-
-<details>
-<summary>发布新版本（触发 Release 工作流）</summary>
-
-```bash
-uv run poe bump patch         # bump 版本 + 自动提交 + 打 tag（bump-my-version）
-git push origin master
-git push origin --tags        # 触发 release.yml：构建 -> 发布 PyPI -> 创建 GitHub Release
-```
-
-> 仓库含 e2e 测试（`tests/e2e_test.py`），配置 `AZURLANE_TEST_UID` / `AZURLANE_TEST_SERVER_ID` secrets 后，每次 push 会用真实账号跑完整链路（查询 + 渲染）。
-
-</details>
-
-## 📁 结构
-
-<details>
-<summary>目录结构</summary>
-
-```
-bot.py                          # NoneBot2 入口
-src/nonebot_plugin_azurlane/
-  __init__.py                   # 插件元信息 + CORS + Web 路由挂载
-  config.py                     # 插件配置（AZURLANE_*）
-  le3api.py                     # le3-api 客户端（异步 / 请求伪装 / 分页）
-  server_status.py              # 区服列表与 ID 换算
-  binding.py                    # 绑定数据存储（SQLite + localstore）
-  session.py                    # 一次性绑定会话（token -> qq/cb，10 分钟有效）
-  web.py                        # Web 登录页 / API（session / servers / bind / bind_cb）
-  qr.py                         # 绑定二维码（圆角渐变 + 中心头像）
-  commands.py                   # 机器人指令（/blhx 信息 / 建造记录 / 绑定）
-  renderer.py                   # 渲染面板：读模板 + @font-face + 头像下载；htmlrender 出图
-  templates/                    # HTML 面板模板 + 登录页
-  data/                         # 渲染资源：logo / 吉祥物（字体走系统 local()）
-  static/                       # 登录页素材（login_avatar / login_bg / login/ CDN 副本）
-tests/                          # pytest + nonebug 测试
-.github/workflows/              # CI（lint / 类型检查 / 测试 / e2e）/ release / release-drafter
-```
-
-</details>
-
-## 📊 数据来源
-
-| 数据 | 来源 |
-| --- | --- |
-| 指挥官详情 / 建造记录 | `le3-api.game.bilibili.com`（需伪装微信小程序请求头） |
-| 区服列表与状态 | `server-checker.nanoda.work`（上游 `AzurLaneServerStatus`，实时状态） |
-| 指挥官 / 舰船头像 | le3-api 返回的图片 URL（bot 下载后 base64 内嵌，失败回退本地 logo） |
 
 ## 已知局限
 
-- 渠道服（华为/小米/应用宝等）`le3-api` 无数据，绑定渠道服会提示失败。
-- 接口为逆向结果，无官方文档，小程序更新可能导致失效。
-- 请勿高频调用，避免触发风控；勿用于商业用途。
+- 渠道服（华为/小米/应用宝等）本喵暂时查不了,绑定渠道服会提示失败,抱歉喵。
+- 请勿高频调用喵,小心触发风控;也别拿本喵去商用喵。

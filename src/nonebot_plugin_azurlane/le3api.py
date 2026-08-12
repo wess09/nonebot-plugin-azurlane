@@ -1,4 +1,4 @@
-"""le3-api 客户端：B 站碧蓝航线微信小程序后端接口（逆向 + 模拟调用，见 API.md）。"""
+"""le3-api 客户端：B 站碧蓝航线微信小程序后端接口（逆向 + 模拟调用）。"""
 
 import httpx
 
@@ -75,7 +75,7 @@ async def get_build_record(
 ) -> BuildRecordResult:
     """建造记录 get/build_record，按每页最多 50 条循环拉取凑够 target_count。
 
-    分页约定见 API.md：最后一页 page_size 取剩余量；任一页非 0 即中断。
+    分页约定：最后一页 page_size 取剩余量；任一页非 0 即中断。
     """
     target_count = max(1, min(target_count, 500))
     records: list[BuildRecordItem] = []

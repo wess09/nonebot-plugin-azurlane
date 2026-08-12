@@ -1,6 +1,6 @@
 """区服列表与状态：上游 AzurLaneServerStatus（server-checker.nanoda.work）。
 
-返回的服务器 id 是游戏协议原生纯序号，对接 le3-api 时需要换算（API.md 第 4 节）。
+返回的服务器 id 是游戏协议原生纯序号，对接 le3-api 时需要换算。
 """
 
 from typing import Any, TypedDict, cast

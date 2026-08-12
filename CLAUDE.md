@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-碧蓝航线（AzurLane）NoneBot2 查询机器人。对接 B 站碧蓝航线微信小程序后端 `le3-api`（逆向 + 模拟调用，接口约定见 [API.md](API.md)），用 nonebot-plugin-htmlrender 渲染 HTML 面板成图片发送。QQ 发 `/绑定` 得到二维码，扫码在 Web 登录页完成 UID+区服绑定。
+碧蓝航线（AzurLane）NoneBot2 查询机器人。对接 B 站碧蓝航线微信小程序后端 `le3-api`（逆向 + 模拟调用），用 nonebot-plugin-htmlrender 渲染 HTML 面板成图片发送。QQ 发 `/绑定` 得到二维码，扫码在 Web 登录页完成 UID+区服绑定。
 
 ## 常用命令
 
