@@ -117,7 +117,13 @@ jobs:
         run: uv sync --locked
 
       - name: Install Chromium for rendering
-        run: uv run python -m playwright install chromium
+        run: |
+          uv run python -m playwright install chromium
+          # htmlrender 默认在 localstore 目录找浏览器；这里显式指向 playwright 安装的 chromium
+          CHROME=$(find ~/.cache/ms-playwright -type f \( -name "chrome" -o -name "chrome-headless-shell" \) 2>/dev/null | head -1)
+          if [ -n "$CHROME" ]; then
+            echo "RENDER__PROVIDER_CONFIG__EXECUTABLE_PATH=$CHROME" >> "$GITHUB_ENV"
+          fi
 
       - name: Run E2E tests
         run: uv run pytest tests/e2e_test.py -v
