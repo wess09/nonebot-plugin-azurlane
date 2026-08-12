@@ -7,11 +7,7 @@ async def test_plugin_loads():
     # 依赖 conftest 的 after_nonebot_init fixture 先初始化 NoneBot
     import nonebot_plugin_azurlane  # noqa: F401
     from nonebot_plugin_azurlane.commands import (
-        bind_cmd,
-        build_cmd,
-        commander_cmd,
+        blhx_cmd,
     )
 
-    assert commander_cmd is not None
-    assert build_cmd is not None
-    assert bind_cmd is not None
+    assert blhx_cmd is not None

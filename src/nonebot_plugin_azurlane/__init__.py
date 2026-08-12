@@ -13,7 +13,7 @@ from .config import config
 __plugin_meta__ = PluginMetadata(
     name="碧蓝航线查询",
     description="指挥官信息 / 建造记录查询，Web 界面登录绑定",
-    usage="/指挥官\n/建造 [数量]\n/绑定",
+    usage="/blhx 信息\n/blhx 建造记录 [数量]\n/blhx 绑定",
     type="application",
     homepage="https://github.com/wess09/nonebot-plugin-azurlane",
     config=config.__class__,

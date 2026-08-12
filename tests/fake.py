@@ -26,6 +26,7 @@ def fake_group_message_event_v11(**field) -> "GroupMessageEventV11":
         group_id: int = 87654321
         message_id: int = random.randint(1, 10000000)
         message: Message = Message("test")
+        original_message: Message = Message("test")
         raw_message: str = "test"
         font: int = 0
         sender: Sender = Sender(
@@ -55,6 +56,7 @@ def fake_private_message_event_v11(**field) -> "PrivateMessageEventV11":
         message_type: Literal["private"] = "private"
         message_id: int = 1
         message: Message = Message("test")
+        original_message: Message = Message("test")
         raw_message: str = "test"
         font: int = 0
         sender: Sender = Sender(nickname="test")

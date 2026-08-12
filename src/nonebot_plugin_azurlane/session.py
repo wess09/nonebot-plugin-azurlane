@@ -9,11 +9,15 @@ from typing import TypedDict
 
 
 class Session(TypedDict):
-    """一个绑定会话：QQ、回调地址与创建时间戳。"""
+    """一个绑定会话：QQ、回调地址、创建时间戳与二维码消息位置。"""
 
     qq: str
     cb: str
     created: float
+    # 二维码消息发在哪个会话（"private" / "group"）以及目标 id，绑定成功后原路撤回并补发结果
+    chat_type: str
+    peer_id: int
+    msg_id: int
 
 
 # token -> Session
@@ -21,12 +25,26 @@ _sessions: dict[str, Session] = {}
 _TTL = 10 * 60  # 10 分钟
 
 
-def create_session(qq: str, cb: str) -> str:
+def create_session(qq: str, cb: str, chat_type: str, peer_id: int) -> str:
     """创建绑定会话，返回一次性 token。"""
     token = secrets.token_urlsafe(16)
-    _sessions[token] = Session(qq=qq, cb=cb, created=time.time())
+    _sessions[token] = Session(
+        qq=qq,
+        cb=cb,
+        created=time.time(),
+        chat_type=chat_type,
+        peer_id=peer_id,
+        msg_id=0,
+    )
     _cleanup()
     return token
+
+
+def attach_msg_id(token: str, msg_id: int) -> None:
+    """补记二维码消息 id（发消息成功后调用，用于绑定完成时撤回）。"""
+    sess = _sessions.get(token)
+    if sess is not None:
+        sess["msg_id"] = msg_id
 
 
 def get_session(token: str) -> Session | None:

@@ -127,18 +127,26 @@ async def api_bind(request: Request) -> JSONResponse:
 
 @router.get("/api/bind_cb")
 async def api_bind_cb(t: str = "", nickname: str = "") -> JSONResponse:
-    """绑定回调：绑定成功后前端跳转到此接口（带 token），由 bot 补发私聊通知。"""
+    """绑定回调：绑定成功后撤回二维码消息，并在原申请场景补发绑定成功通知。"""
     sess = session.consume_session(t)
     if sess is not None and _QQ_RE.match(sess["qq"]):
         try:
             bot = get_bot()
-            await bot.send_private_msg(
-                user_id=int(sess["qq"]),
-                message=(
-                    f"绑定成功，指挥官 {nickname or ''}！\n"
-                    "发送「指挥官」查询指挥官信息，发送「建造 10」查询最近建造记录。"
-                ),
+            # 撤回之前发出的绑定二维码（原消息可能已删/实现方不支持，失败忽略）。
+            if sess["msg_id"]:
+                try:
+                    await bot.delete_msg(message_id=sess["msg_id"])
+                except Exception:
+                    pass
+            message = (
+                f"绑定成功，指挥官 {nickname or ''}！\n"
+                "/blhx 信息 查询指挥官信息，/blhx 建造记录 10 查询最近建造记录。"
             )
+            # 二维码发在哪就在哪通知：群聊发群里，私聊发私聊。
+            if sess["chat_type"] == "group":
+                await bot.send_group_msg(group_id=sess["peer_id"], message=message)
+            else:
+                await bot.send_private_msg(user_id=sess["peer_id"], message=message)
         except Exception:
             pass
     return JSONResponse({"ok": True})
