@@ -1,0 +1,32 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 功能'
+    labels:
+      - 'feat'
+      - 'enhancement'
+  - title: '🐛 修复'
+    labels:
+      - 'fix'
+      - 'bug'
+  - title: '📝 文档'
+    labels:
+      - 'docs'
+  - title: '🔧 其他'
+change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+change-title-escapes: '\<*_&`#@'
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+template: |
+  ## 变更
+
+  $CHANGES
