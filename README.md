@@ -1,152 +1,141 @@
-# 碧蓝航线 NoneBot2 机器人
+<div align="center">
+    <a href="https://v2.nonebot.dev/store">
+    <img src="https://raw.githubusercontent.com/fllesser/nonebot-plugin-template/refs/heads/resource/.docs/NoneBotPlugin.svg" width="310" alt="logo"></a>
 
-基于 [NoneBot2](https://github.com/nonebot/nonebot2) 的碧蓝航线查询机器人，面板用 [nonebot-plugin-htmlrender](https://github.com/kexue-z/nonebot-plugin-htmlrender) 渲染成图片发送。
+## ✨ nonebot-plugin-azurlane ✨
+[![python](https://img.shields.io/badge/python-3.10|3.11|3.12|3.13|3.14-blue.svg)](https://www.python.org)
+[![uv](https://img.shields.io/badge/package%20manager-uv-black?style=flat-square&logo=uv)](https://github.com/astral-sh/uv)
+<br/>
+[![ruff](https://img.shields.io/badge/code%20style-ruff-black?style=flat-square&logo=ruff)](https://github.com/astral-sh/ruff)
+[![pre-commit](https://results.pre-commit.ci/badge/github/wess09/nonebot-plugin-azurlane/master.svg)](https://results.pre-commit.ci/latest/github/wess09/nonebot-plugin-azurlane/master)
+[![codecov](https://codecov.io/gh/wess09/nonebot-plugin-azurlane/graph/badge.svg)](https://codecov.io/gh/wess09/nonebot-plugin-azurlane)
 
-对接 B 站碧蓝航线微信小程序后端 `le3-api`（接口定义见 [API.md](API.md)，为逆向 + 模拟调用）。
+</div>
 
-## 功能 / 指令
+> [!IMPORTANT]
+> **收藏项目** 以便创建插件仓库～⭐️
 
-统一入口 `/blhx`，后接子命令：
+<img width="100%" src="https://starify.komoridevs.icu/api/starify?owner=wess09&repo=nonebot-plugin-azurlane" alt="starify" />
 
-- `/blhx 信息` — 查询指挥官信息（等级、资源、收集率、待办副本等），以图片面板展示
-- `/blhx 建造记录 [数量]`（或 `/blhx 记录`） — 查询最近建造记录（默认 10 条，上限 500），以图片面板展示
-- `/blhx 绑定`（或 `/blhx 登录` / `/blhx login`） — 发送**绑定二维码**（一次性 token 会话），扫码在 Web 登录页填写 UID 并选择区服完成绑定
-- 查询/面板**不展示区服**等敏感信息，区服仅用于服务端换算 `server_id`
+### 不要 fork ! 不要 fork ! 不要 fork !
 
-> 旧命令 `/指挥官`、`/建造`、`/绑定` 不再支持，统一改用 `/blhx`。
+### 🎉 快速开始
 
-## 绑定流程
+1. 点击 [创建仓库](https://github.com/new?template_owner=fllesser&template_name=nonebot-plugin-template&owner=%40me&name=nonebot-plugin-&visibility=public)
+2. **⚠️ 重要:** 前往仓库 `Settings` -> `Actions` -> `General` -> 最下方 `Workflow permissions`, 勾选 `Read and write permissions`，然后点击 `Save` 按钮
+3. 在 `Add file` 菜单中选择 `Create new file`, 在新文件名处输入`LICENSE`, 此时在右侧会出现一个 `Choose a license template` 按钮, 点击此按钮选择开源协议模板, 然后在最下方提交新文件到主分支(这会触发一个工作流，生成新的 `README`，并修改 `pyproject.toml` 等文件中的插件名称)
 
-1. QQ 发送 `/blhx 绑定`，bot 生成一次性 token 会话（10 分钟有效）并发送二维码图片
-2. 扫码打开登录页（URL 只带短 token，不暴露 QQ/回调信息），填写 UID 并选区服
-3. 绑定成功后前端跳回 bot 回调接口，bot 给 QQ 发私聊通知
+> [!NOTE]
+> 模板库中自带了一个 Release 工作流, 你可以使用此工作流发布你的插件到 PyPI
 
-## 安装
+<details>
+<summary>配置 PyPI Trusted Publisher</summary>
+配置文档: https://docs.pypi.org/trusted-publishers/adding-a-publisher/ 
 
-### 通过 NoneBot2 插件商店（NB-CLI）
+ - PyPI Project Name: nonebot-plugin-azurlane
+ - Owner: Your GitHub username
+ - Repository name: nonebot-plugin-azurlane
+ - Workflow name: release.yml
+ - Environment name: release
 
-```bash
-nb plugin install nonebot-plugin-azurlane
-```
+</details>
 
-### 从源码运行
+<details>
+<summary>使用 bump-my-version 工具更新版本号，并触发 Release 工作流 (推荐)</summary>
 
-```bash
-# 1. 安装依赖
-pip install -e .
+`bump-my-version` 和 `poethepoet` 在 dev 依赖组中，使用 `uv sync` 安装，或者使用 `uv tool install` 全局安装
 
-# 2. 配置 .env（见下方「渲染与绑定配置」）
+    uv run poe bump patch
 
-# 3. 启动
-python bot.py
-```
+该操作会有以下行为:
+1. 更新 `pyproject.toml` 中 `project.version` 和 `tool.bumpversion.current_version`
+2. 更新 `uv.lock` 中的版本号
+3. 创建一个带 `tag` 的提交, 提交信息可以在 `pyproject.toml` 中的 `[tool.bumpversion]` 中配置
 
-> 渲染用 Chromium 请参考下方「渲染配置」。插件不强制自动下载浏览器，建议用本机已有的 Edge 或手动安装的 Playwright Chromium 并通过 `RENDER__PROVIDER_CONFIG__EXECUTABLE_PATH` 指定。
+接下来你只需要推送提交，并推送 `tag` (git push origin --tags) 即可触发 Release 工作流
 
-- 需要先运行一个 OneBot 11 实现（如 [NapCat](https://github.com/NapNeko/NapCatQQ) / [go-cqhttp](https://github.com/Mrs4s/go-cqhttp)），在 `.env` 的 `ONEBOT_WS_URLS` 中填写其正向 WebSocket 地址。
-- Web 登录页由 bot 自身通过 FastAPI 提供，地址见 `.env` 的 `AZURLANE_BIND_BASE_URL`（外部访问需要内网穿透）。
+</details>
 
-## 渲染与绑定配置（.env）
+<details>
+<summary>触发 Release 工作流 (手动)</summary>
 
-```env
-# ---- NoneBot 驱动（必须含 fastapi + httpx，bot 需要 API 服务与访问 le3-api）----
-DRIVER = ~fastapi+~httpx+~websockets
-HOST = 0.0.0.0
-PORT = 8081
+更新版本号 
 
-# ---- OneBot 11 正向 WS（OneBot 实现方地址）----
-ONEBOT_WS_URLS = ["ws://127.0.0.1:6700"]
-ONEBOT_ACCESS_TOKEN =
+    uv version --bump patch
+    
+possible values: major, minor, patch, stable, alpha, beta, rc, post, dev
 
-# ---- 绑定链接公开地址（Web 登录页；CDN 部署时改为 CDN 页面地址）----
-AZURLANE_BIND_BASE_URL = http://127.0.0.1:8081
+提交并推送...
 
-# ---- bot 服务公网地址（绑定回调跳转目标；CDN 部署时改为 bot 公网可访问地址）----
-AZURLANE_API_BASE_URL = http://127.0.0.1:8081
+从本地推送任意 `tag` 即可触发。
 
-# ---- le3-api 可选 Cookie（部分接口不带可能拿不到数据）----
-AZURLANE_COOKIE =
+创建 `tag`:
 
-# ---- htmlrender 渲染配置 ----
-RENDER__PROVIDER = playwright
-RENDER__STARTUP = warmup
-RENDER__PROVIDER_CONFIG__ENGINE = chromium
-# 指向本机 Edge 或已装的 Playwright Chromium 可执行文件（必须填，否则找不到浏览器）
-RENDER__PROVIDER_CONFIG__EXECUTABLE_PATH = C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
-RENDER__PROVIDER_CONFIG__SKIP_BROWSER_INSTALL = true
+    git tag v*
 
-# ---- 部署者管理员 QQ（可选，接收绑定通知）----
-AZURLANE_ADMIN_QQ =
-```
+推送本地所有 `tag`:
 
-### 字体（重要：渲染性能）
+    git push origin --tags
 
-面板通过 `@font-face` 用 `local('字体名')` **直接引用系统字体，不内嵌 base64**。因此渲染前**需把面板用到的字体安装到系统**（Windows：`C:\Windows\Fonts`，或双击 TTF → 安装），否则字体 fallback 到系统默认、外观不同，且可能拖慢渲染。
+</details>
 
-本插件 `renderer.py` 里 `_SYSTEM_FACES` 定义的面板字体：
+> [!IMPORTANT]
+> 不会使用 uv ？
 
-| 面板字体名 | 期望的系统字体 | 用途 |
-| --- | --- | --- |
-| `SourceHanSans` | `Source Han Sans CN` / `SC` / `TC` / `思源黑体` | 正文 |
-| `MStiffHei` | `MStiffHei PRC` / `MStiffHei` | 标题 |
-| `Agency` | `Agency FB` | 数字 / 英文标语 |
+<details>
+<summary>不会看文档去</summary>
 
-> `local()` 会按候选逐个匹配系统里真实注册的字体名，命中一个即可；都不命中则 fallback 到系统默认字体。
-> 历史版本曾把字体 base64 内嵌进 HTML（27MB 级别），导致渲染慢；现已改为系统字体引用，面板 HTML 显著变小。
+<details>
+<summary>安装 uv </summary>
 
-### 登录页部署到 CDN
+`windows`:
 
-登录页是**纯静态自包含**页面，可部署到 CDN 加速分发（包内 `src/nonebot_plugin_azurlane/static/login/` 目录）：
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+`curl`:
 
-```bash
-# 部署 src/nonebot_plugin_azurlane/static/login/ 目录到 CDN 即可：index.html + login_bg.mp4 + login_avatar.webp
-```
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+`pipx`:
 
-- `.env` 中 `AZURLANE_BIND_BASE_URL` 设为 CDN 页面地址（`/绑定` 指令的二维码指向它）
-- `AZURLANE_API_BASE_URL` 设为 bot 公网地址（登录页绑定接口与回调跳转目标）
-- 登录页 `src/nonebot_plugin_azurlane/static/login/index.html` 顶部 `API_BASE` 常量改为 bot 公网地址（若与页面不同源）
-- bot 已开放 CORS（`allow_origins=["*"]`），支持跨域调用 `/api/*`
-- 页面无 token 时提示"请先在 QQ 内发起绑定"，防止直接访问滥用
+    pipx install uv
+    
+</details>
 
-## 结构
+安装所有依赖(自动创建 `venv` 虚拟环境, `-p` 指定 `python` 版本):
 
-```
-bot.py                          # NoneBot2 入口
-src/nonebot_plugin_azurlane/
-  __init__.py                   # 插件元信息 + CORS + Web 路由挂载
-  config.py                     # 插件配置
-  le3api.py                     # le3-api 客户端（异步 / 请求伪装 / 分页）
-  server_status.py              # 区服列表与 ID 换算
-  binding.py                    # 绑定数据存储（SQLite + localstore）
-  session.py                    # 一次性绑定会话（token -> qq/cb，10 分钟有效）
-  web.py                        # Web 登录页 / API（session / servers / bind / bind_cb）
-  qr.py                         # 绑定二维码（圆角渐变 + 中心头像）
-  commands.py                   # 机器人指令（/指挥官 /建造 /绑定）
-  renderer.py                   # 渲染面板：读模板 + @font-face + 头像下载；htmlrender 出图
-  templates/                    # HTML 面板模板 + 登录页
-  data/                         # 渲染资源：logo / 吉祥物（字体走系统 local()，可不放这里）
-  static/                       # 登录页素材（login_avatar / login_bg / login/ CDN 副本）
-tests/                          # pytest + nonebug 测试
-.github/workflows/              # CI / release
-```
+    uv sync --all-groups -p 3.12
+添加其他依赖, 例如 `koishi`(bushi
 
-## 数据来源
+    uv add koishi
+[uv 文档](https://astral.sh/blog/uv)
+</details>
 
-| 数据 | 来源 |
-| --- | --- |
-| 指挥官详情 / 建造记录 | `le3-api.game.bilibili.com`（需伪装微信小程序请求头） |
-| 区服列表与状态 | `server-checker.nanoda.work`（上游 `AzurLaneServerStatus`，实时状态） |
-| 指挥官 / 舰船头像 | le3-api 返回的图片 URL（由 bot 下载后 base64 内嵌，避免渲染时联网失败坏图） |
+> [!NOTE]
+> pre-commit / prek 使用方法
 
-## 渲染说明
+<details>
+<summary>提交前检查</summary>
 
-- 面板由 bot 拼好 HTML 字符串交给 htmlrender（Playwright）截图，再以图片发送。
-- **字体**：用 `local()` 引用系统字体，需预装（见上文「字体」），避免 27MB 级 base64 拖慢渲染。
-- **头像/吉祥物**：吉祥物是本地文件 base64 内嵌；指挥官/舰船头像来自 le3-api 的图片 URL，由 bot 下载后转 base64——若 URL 为空或下载失败则回退到本地 `logo.webp`，保证面板不出现坏图，也不会让渲染卡在等待外网图片。
-- 渲染超时：`renderer.py` 里 `_render` 的 `timeout_seconds`（默认 120）。网络慢或机器弱可适当调高。
+安装 `pre-commit`
 
-## 已知局限
+    uv tool install pre-commit
 
-- 渠道服（华为/小米/应用宝等）`le3-api` 无数据，绑定渠道服会提示失败。
-- 接口为逆向结果，无官方文档，小程序更新可能导致失效。
-- 请勿高频调用，避免触发风控；勿用于商业用途。
+或安装 `prek` (推荐)
+
+On `Linux` / `macOS`:
+
+    curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/v0.2.13/prek-installer.sh | sh
+On `Windows`:
+
+    powershell -ExecutionPolicy ByPass -c "irm https://github.com/j178/prek/releases/download/v0.2.13/prek-installer.ps1 | iex"
+安装钩子
+
+    pre-commit install
+
+    prek install
+添加到暂存区
+
+    git add <待提交文件>
+
+仓库地址: 
+- [`prek`](https://github.com/j178/prek)
+</details>
