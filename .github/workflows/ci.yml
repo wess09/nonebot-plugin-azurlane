@@ -102,8 +102,7 @@ jobs:
   e2e:
     name: E2E (real le3-api)
     runs-on: ubuntu-latest
-    # 仅当仓库配置了测试账号 secrets 时运行（fork/未配置时跳过）
-    if: ${{ secrets.AZURLANE_TEST_UID != '' && secrets.AZURLANE_TEST_SERVER_ID != '' }}
+    # 测试本身无 secrets 时会自动 skip，无需 job 级判断
     steps:
       - uses: actions/checkout@v6
 
