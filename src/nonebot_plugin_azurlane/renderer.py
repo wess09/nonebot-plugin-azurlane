@@ -21,30 +21,27 @@ _COLLECTION_MASCOT_PATHS = tuple(
     Path(__file__).parent / "data" / "mascots" / name
     for name in ("akashi_chibi.png", "laffey_chibi.png", "ayanami_chibi.png")
 )
-# 碧蓝航线游戏内字体（来自包内 data/ 目录）
-_FONTS: dict[str, Path] = {
+# 渲染用字体：TTF 装在系统里（C:\Windows\Fonts），@font-face 用 local() 直接引用，
+# 不再 base64 内嵌，避免 27MB HTML 拖慢 playwright。
+_SYSTEM_FACES = (
+    # 正文思源黑体（先撞系统注册名，撞不中就 fallback）
+    ("SourceHanSans", ["Source Han Sans CN", "Source Han Sans SC", "思源黑体"]),
     # 标题粗黑体
-    "MStiffHei": Path(__file__).parent / "data" / "MStiffHei.ttf",
-    # 界面正文
-    "SourceHanSans": Path(__file__).parent / "data" / "SourceHanSans.ttf",
+    ("MStiffHei", ["MStiffHei PRC", "MStiffHei"]),
     # 西文数字/英文标语
-    "Agency": Path(__file__).parent / "data" / "agency.ttf",
-}
+    ("Agency", ["Agency FB"]),
+)
 
 # 模板占位符数据：统一 str（占位符替换用）
 TemplateData = dict[str, str]
 
 
 def _font_faces() -> str:
-    """生成所有字体的 @font-face 内联样式（base64 内嵌）。"""
+    """生成所有字体的 @font-face（用 local() 引用系统字体，不 base64）。"""
     faces: list[str] = []
-    for name, path in _FONTS.items():
-        if path.exists():
-            b64 = base64.b64encode(path.read_bytes()).decode()
-            faces.append(
-                f"@font-face{{font-family:'{name}';"
-                f"src:url(data:font/truetype;base64,{b64}) format('truetype');}}"
-            )
+    for name, candidates in _SYSTEM_FACES:
+        srcs = ", ".join(f"local('{c}')" for c in candidates)
+        faces.append(f"@font-face{{font-family:'{name}';src:{srcs};}}")
     return "".join(faces)
 
 
@@ -59,6 +56,43 @@ def _image_data_uri(path: Path, media_type: str) -> str:
         return ""
     b64 = base64.b64encode(path.read_bytes()).decode()
     return f"data:{media_type};base64,{b64}"
+
+
+async def _network_image_data_uri(url: str) -> str:
+    """把远程头像 URL 下载并转成 base64 data URI，供面板 <img> 内嵌。
+
+    为什么不用 <img src="http://..."> 直接引用：
+        头像 URL 来自 le3-api，可能为空、或网络不可达。若交给 playwright/Edge 在
+        渲染时联网拉取，拉不到就会坏图，还会拖住 networkidle 让整张面板渲染卡顿。
+        改成由 bot（已有 httpx）先下载好、内嵌成 data URI，渲染过程完全不碰外网。
+
+    参数：
+        url — le3-api 返回的头像地址（可能为空字符串或非法值）。
+
+    返回：
+        成功 → 形如 "data:image/webp;base64,...." 的 data URI；
+        失败（URL 为空/非法/下载异常）→ 回退本地 data/logo.webp 的 data URI，
+        保证 <img> 不会因为空 src 渲染出破损图片。
+    """
+    # 1) 只有 http(s) 链接才尝试下载；否则直接走回退。
+    url = url.strip()
+    if url.startswith(("http://", "https://")):
+        try:
+            import httpx
+
+            # trust_env=False：绕过系统代理直连，避免代理劫持 TLS（与 le3api 一致）。
+            async with httpx.AsyncClient(timeout=httpx.Timeout(8), trust_env=False) as client:
+                resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+            b64 = base64.b64encode(resp.content).decode()
+            media_type = resp.headers.get("Content-Type", "image/*").split(";")[0] or "image/*"
+            return f"data:{media_type};base64,{b64}"
+        except Exception:
+            # 下载失败（网络不可达 / 404 / 超时）落到下方回退。
+            pass
+
+    # 2) 回退路径：URL 缺失或不可达时，用本地 logo.webp 兜底，避免坏图。
+    return _image_data_uri(Path(__file__).parent / "data" / "logo.webp", "image/webp")
 
 
 def _fmt_collection_rate(v: object) -> str:
@@ -149,7 +183,7 @@ async def build_commanders_pic(detail: UserDetail) -> bytes:
         "collection_mascot_1": _image_data_uri(_COLLECTION_MASCOT_PATHS[0], "image/png"),
         "collection_mascot_2": _image_data_uri(_COLLECTION_MASCOT_PATHS[1], "image/png"),
         "collection_mascot_3": _image_data_uri(_COLLECTION_MASCOT_PATHS[2], "image/png"),
-        "avatar": _as_str(ui["avatar"]),
+        "avatar": await _network_image_data_uri(_as_str(ui["avatar"])),
         "nickname": _as_str(ui["nickname"]),
         "level": _as_str(ui["level"]),
         "guild_name": _as_str(ui["guild_name"] or "未加入舰队"),
@@ -225,7 +259,7 @@ async def build_build_records_pic(result: BuildRecordResult) -> bytes:
     data: TemplateData = {
         "logo": _logo_data_uri(),
         "nickname": nickname,
-        "avatar": _as_str(result["avatar"]),
+        "avatar": await _network_image_data_uri(_as_str(result["avatar"])),
         "fetched": _as_str(fetched),
         "total_count": _as_str(total_count),
         "rows": rows,
