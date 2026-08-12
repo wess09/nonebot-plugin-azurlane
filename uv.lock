@@ -984,7 +984,7 @@ wheels = [
 
 [[package]]
 name = "nonebot-plugin-azurlane"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
