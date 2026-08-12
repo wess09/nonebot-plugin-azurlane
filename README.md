@@ -11,6 +11,10 @@
 
 </div>
 
+喵呜~ 如果本喵帮到了指挥官,记得点个 ⭐ Star 支持一下喵~
+
+<img width="100%" src="https://starify.komoridevs.icu/api/starify?owner=wess09&repo=nonebot-plugin-azurlane" alt="starify" />
+
 喵呜~ 欢迎指挥官!这里是 **nonebot-plugin-azurlane**,一只专属于您的碧蓝航线查询小助手喵。在 QQ 里喊本喵一声,就能查到指挥官信息、建造记录,绑定后随时一键查询,所有结果都会渲染成漂漂亮亮的图片面板送给指挥官喵~
 
 > [!IMPORTANT]
