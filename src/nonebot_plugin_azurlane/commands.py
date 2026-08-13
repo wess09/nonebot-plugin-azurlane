@@ -50,12 +50,17 @@ _TOKENS = {
 
 @blhx_cmd.handle()
 async def handle_blhx(bot: Bot, event: MessageEvent, arg: Message = CommandArg()) -> None:
-    """/blhx 入口：按首个 token 分派到各子命令处理。"""
+    """/blhx 入口：按子命令 token 分派到各子命令处理。"""
     raw = arg.extract_plain_text().strip()
-    # 拆首个 token（可能是子命令名，也可能带数量如 "建造 10"）。
-    first, _, rest = raw.partition(" ")
-    token = first.lower() if first else ""
-    action = _TOKENS.get(token)
+    # 取最长匹配的子命令 token 作前缀，剩余部分作为参数，
+    # 同时兼容 "建造 10" 与 "建造10"（不带空格）两种写法。
+    action: str | None = None
+    rest = ""
+    for key in sorted(_TOKENS, key=len, reverse=True):
+        if raw.lower().startswith(key.lower()):
+            action = _TOKENS[key]
+            rest = raw[len(key):].strip()
+            break
 
     # 未识别的子命令给出用法提示。
     if action is None:
