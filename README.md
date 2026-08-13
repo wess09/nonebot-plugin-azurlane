@@ -64,6 +64,29 @@ python bot.py      # 启动
 
 </details>
 
+## 🔌 适配器（多协议支持）
+
+消息处理已按 NoneBot 泛型基类解耦，指令（`/blhx 信息`、`/blhx 建造记录`、`/blhx 绑定`）可挂到不同协议喵。**已适配并测试**：
+
+| 协议 | 发图方式 | 绑定撤回/通知 |
+| --- | --- | --- |
+| **OneBot V11** | 图片字节直接进消息段（base64） | ✅ 完整 |
+| **OneBot V12** | 先 `upload_file` 拿 file_id 再引用 | ✅ `delete_message` / `send_message` |
+
+想接入别的协议，三步搞定：
+
+1. 安装对应适配器包，例如 `uv add nonebot-adapter-telegram`；
+2. 在 `.env` 用 `ADAPTERS` 列出协议名（逗号分隔），例如 `ADAPTERS = onebot.v11,telegram`；
+3. 按该适配器要求补上它的连接配置（Token / URL 等），重启即可。
+
+支持的协议名：`onebot.v11`、`onebot.v12`、`qq`、`qqguild`、`satori`、`red`、`telegram`、`discord`、`kaiheila`、`feishu`、`ding`、`dodo`、`minecraft`、`console`、`matrix`、`slack`、`whatsapp`、`villa`、`milky`。
+
+> [!IMPORTANT]
+> 除 OneBot V11/V12 外，其余协议**未在本机实测**：各协议的 `MessageSegment.image` 签名不一（有的收原始字节、有的收 file_id、有的收 URL），本插件按签名自动分派、对未知签名尽力而为，但**不能保证图片能正常发出**。接入前请自测图片发送与绑定回调喵。
+
+> [!NOTE]
+> `/blhx 绑定` 在任意适配器都能发出二维码并完成绑定；但「扫码后自动撤回二维码 + 在原会话补发绑定成功通知」依赖各协议的撤回/发消息 API，只在 OneBot V11/V12 上完整可用，其它适配器会尽力而为（失败静默跳过，不影响绑定本身）喵。
+
 ## ⚙️ 配置（.env）
 
 <details>
