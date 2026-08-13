@@ -9,12 +9,19 @@ from typing import TypedDict
 
 
 class Session(TypedDict):
-    """一个绑定会话：QQ、回调地址、创建时间戳与二维码消息位置。"""
+    """一个绑定会话：用户 id、回调地址、发起 bot 与二维码消息位置。
+
+    qq 字段实为「适配器用户 id」（跨适配器后不再限于 QQ 号），沿用旧名避免
+    改动 SQLite 列与既有数据。
+    """
 
     qq: str
     cb: str
     created: float
-    # 二维码消息发在哪个会话（"private" / "group"）以及目标 id，绑定成功后原路撤回并补发结果
+    # 发起绑定时的 bot self_id，绑定回调按它定向取回同一 bot 补发通知
+    self_id: str
+    # 二维码消息发在哪个会话（"private" / "group" / ""）以及目标 id，绑定成功后原路撤回并补发结果；
+    # 非 OneBot 场景推断不出时为 "" / 0，撤回与通知由 compat 尽力而为地跳过。
     chat_type: str
     peer_id: int
     msg_id: int
@@ -25,13 +32,14 @@ _sessions: dict[str, Session] = {}
 _TTL = 10 * 60  # 10 分钟
 
 
-def create_session(qq: str, cb: str, chat_type: str, peer_id: int) -> str:
+def create_session(qq: str, cb: str, self_id: str, chat_type: str, peer_id: int) -> str:
     """创建绑定会话，返回一次性 token。"""
     token = secrets.token_urlsafe(16)
     _sessions[token] = Session(
         qq=qq,
         cb=cb,
         created=time.time(),
+        self_id=self_id,
         chat_type=chat_type,
         peer_id=peer_id,
         msg_id=0,

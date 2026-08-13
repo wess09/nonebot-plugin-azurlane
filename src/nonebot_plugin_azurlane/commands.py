@@ -5,16 +5,9 @@
 
 from nonebot import on_command
 from nonebot.params import CommandArg
-from nonebot.adapters.onebot.v11 import (
-    Bot,
-    Message,
-    MessageEvent,
-    MessageSegment,
-    GroupMessageEvent,
-    PrivateMessageEvent,
-)
+from nonebot.adapters import Bot, Event, Message
 
-from . import le3api, session
+from . import compat, le3api, session
 from .qr import make_bind_qr
 from .config import config
 from .binding import get_binding
@@ -49,7 +42,7 @@ _TOKENS = {
 
 
 @blhx_cmd.handle()
-async def handle_blhx(bot: Bot, event: MessageEvent, arg: Message = CommandArg()) -> None:
+async def handle_blhx(bot: Bot, event: Event, arg: Message = CommandArg()) -> None:
     """/blhx 入口：按子命令 token 分派到各子命令处理。"""
     raw = arg.extract_plain_text().strip()
     # 取最长匹配的子命令 token 作前缀，剩余部分作为参数，
@@ -59,7 +52,7 @@ async def handle_blhx(bot: Bot, event: MessageEvent, arg: Message = CommandArg()
     for key in sorted(_TOKENS, key=len, reverse=True):
         if raw.lower().startswith(key.lower()):
             action = _TOKENS[key]
-            rest = raw[len(key):].strip()
+            rest = raw[len(key) :].strip()
             break
 
     # 未识别的子命令给出用法提示。
@@ -73,16 +66,16 @@ async def handle_blhx(bot: Bot, event: MessageEvent, arg: Message = CommandArg()
         )
 
     if action == "commander":
-        await _handle_commander(event)
+        await _handle_commander(bot, event)
     elif action == "build":
-        await _handle_build(event, rest)
+        await _handle_build(bot, event, rest)
     else:
         await _handle_bind(bot, event)
 
 
-async def _handle_commander(event: MessageEvent) -> None:
+async def _handle_commander(bot: Bot, event: Event) -> None:
     """查询指挥官信息并发送面板图片。"""
-    qq = str(event.user_id)
+    qq = event.get_user_id()
     binding = get_binding(qq)
     if binding is None:
         await blhx_cmd.finish("尚未绑定。发送「绑定」获取 Web 登录页完成绑定。")
@@ -96,12 +89,12 @@ async def _handle_commander(event: MessageEvent) -> None:
         await blhx_cmd.finish(f"查询失败：{e}")
 
     pic = await build_commanders_pic(detail)
-    await blhx_cmd.finish(MessageSegment.image(pic))
+    await blhx_cmd.finish(await compat.image_message(bot, event, pic))
 
 
-async def _handle_build(event: MessageEvent, rest: str) -> None:
+async def _handle_build(bot: Bot, event: Event, rest: str) -> None:
     """查询建造记录并发送面板图片。rest 为数量（可选）。"""
-    qq = str(event.user_id)
+    qq = event.get_user_id()
     binding = get_binding(qq)
     if binding is None:
         await blhx_cmd.finish("尚未绑定。发送「绑定」获取 Web 登录页完成绑定。")
@@ -129,24 +122,23 @@ async def _handle_build(event: MessageEvent, rest: str) -> None:
         await blhx_cmd.finish("未查询到建造记录。")
 
     pic = await build_build_records_pic(result)
-    await blhx_cmd.finish(MessageSegment.image(pic))
+    await blhx_cmd.finish(await compat.image_message(bot, event, pic))
 
 
-async def _handle_bind(bot: Bot, event: MessageEvent) -> None:
+async def _handle_bind(bot: Bot, event: Event) -> None:
     """生成一次性会话并发送登录二维码，记录消息 id 以便绑定完成后原路撤回。"""
-    qq = str(event.user_id)
+    qq = event.get_user_id()
 
-    # 定位会话：二维码发在哪（群/私聊），绑定成功后就原路撤回并在同场景通知。
-    if isinstance(event, GroupMessageEvent):
-        chat_type, peer_id = "group", event.group_id
-    elif isinstance(event, PrivateMessageEvent):
-        chat_type, peer_id = "private", event.user_id
-    else:
-        await blhx_cmd.finish("仅支持在群聊或私聊中发起绑定。")
+    # 推断会话场景（群/私聊），绑定成功后原路撤回并在同场景通知；
+    # 非 OneBot 场景推断不出时为 None，仅影响撤回/通知（compat 尽力而为）。
+    scene = compat.detect_scene(event)
+    chat_type, peer_id = scene if scene is not None else ("", 0)
 
-    # 登录 URL 只带 token，不暴露 QQ / 回调信息。
+    # 登录 URL 只带 token，不暴露用户 id / 回调信息。
     cb = f"{config.azurlane_api_base_url}/api/bind_cb"
-    token = session.create_session(qq, cb, chat_type, peer_id)
+    token = session.create_session(
+        qq, cb, self_id=bot.self_id, chat_type=chat_type, peer_id=peer_id
+    )
     url = f"{config.azurlane_bind_base_url}/login?t={token}"
 
     # 生成二维码图片（中心嵌圆形头像）。
@@ -158,16 +150,13 @@ async def _handle_bind(bot: Bot, event: MessageEvent) -> None:
         "该二维码为一次性专属：10 分钟内有效，仅限本人扫码，请勿转发他人。\n"
         "提示：绑定信息仅用于查询，区服信息不会在查询结果中展示。"
     )
-    msg = MessageSegment.image(img_bytes) + text
+    msg = (await compat.image_message(bot, event, img_bytes)) + text
 
     try:
-        if chat_type == "group":
-            resp = await bot.send_group_msg(group_id=peer_id, message=msg)
-        else:
-            resp = await bot.send_private_msg(user_id=peer_id, message=msg)
+        resp = await bot.send(event=event, message=msg)
     except Exception as e:
         # 发送失败：不阻塞，提示用户；残留会话由 10 分钟 TTL 清理。
         await blhx_cmd.finish(f"绑定二维码发送失败：{e}")
 
-    # 记下消息 id，绑定完成后用 delete_msg 撤回二维码。
-    session.attach_msg_id(token, int(resp["message_id"]))
+    # 记下消息 id，绑定完成后由 compat.recall 撤回二维码（尽力而为）。
+    session.attach_msg_id(token, compat.extract_msg_id(resp))
