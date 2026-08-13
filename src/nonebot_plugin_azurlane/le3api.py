@@ -75,7 +75,7 @@ async def get_build_record(
 ) -> BuildRecordResult:
     """建造记录 get/build_record，按每页最多 50 条循环拉取凑够 target_count。
 
-    分页约定：最后一页 page_size 取剩余量；任一页非 0 即中断。
+    分页约定：最后一页 page_size 取剩余量；返回空页即终止（已无更多记录）。
     """
     target_count = max(1, min(target_count, 500))
     records: list[BuildRecordItem] = []
@@ -119,6 +119,9 @@ async def get_build_record(
                 page = None
 
             if not isinstance(page, list):
+                break
+            if not page:
+                # 空页：没有更多建造记录了，终止，否则会一直空转拉取导致无响应。
                 break
             records.extend(page)  # type: ignore[arg-type]
             remaining -= len(page)
