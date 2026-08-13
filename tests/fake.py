@@ -5,6 +5,10 @@ if TYPE_CHECKING:
     from nonebot.adapters.onebot.v11 import (
         PrivateMessageEvent as PrivateMessageEventV11,
     )
+    from nonebot.adapters.onebot.v12 import GroupMessageEvent as GroupMessageEventV12
+    from nonebot.adapters.onebot.v12 import (
+        PrivateMessageEvent as PrivateMessageEventV12,
+    )
 
 
 def fake_group_message_event_v11(**field) -> "GroupMessageEventV11":
@@ -36,6 +40,59 @@ def fake_group_message_event_v11(**field) -> "GroupMessageEventV11":
         )
         to_me: bool = False
         reply: Reply | None = None
+
+    return FakeEvent(**field)
+
+
+def fake_group_message_event_v12(**field) -> "GroupMessageEventV12":
+    from datetime import datetime
+
+    from pydantic import create_model
+    from nonebot.adapters.onebot.v12 import Message, GroupMessageEvent
+    from nonebot.adapters.onebot.v12.event import BotSelf
+
+    _Fake = create_model("_Fake", __base__=GroupMessageEvent)
+
+    class FakeEvent(_Fake):
+        id: str = "1"
+        time: datetime = datetime(2026, 1, 1)
+        type: Literal["message"] = "message"
+        detail_type: Literal["group"] = "group"
+        sub_type: str = "normal"
+        self: BotSelf = BotSelf(platform="qq", user_id="10001")
+        message_id: str = "1"
+        message: Message = Message("test")
+        original_message: Message = Message("test")
+        alt_message: str = "test"
+        user_id: str = "12345678"
+        group_id: str = "87654321"
+        to_me: bool = False
+
+    return FakeEvent(**field)
+
+
+def fake_private_message_event_v12(**field) -> "PrivateMessageEventV12":
+    from datetime import datetime
+
+    from pydantic import create_model
+    from nonebot.adapters.onebot.v12 import Message, PrivateMessageEvent
+    from nonebot.adapters.onebot.v12.event import BotSelf
+
+    _Fake = create_model("_Fake", __base__=PrivateMessageEvent)
+
+    class FakeEvent(_Fake):
+        id: str = "1"
+        time: datetime = datetime(2026, 1, 1)
+        type: Literal["message"] = "message"
+        detail_type: Literal["private"] = "private"
+        sub_type: str = "friend"
+        self: BotSelf = BotSelf(platform="qq", user_id="10001")
+        message_id: str = "1"
+        message: Message = Message("test")
+        original_message: Message = Message("test")
+        alt_message: str = "test"
+        user_id: str = "12345"
+        to_me: bool = False
 
     return FakeEvent(**field)
 
