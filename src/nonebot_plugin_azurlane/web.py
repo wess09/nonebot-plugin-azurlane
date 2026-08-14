@@ -92,7 +92,10 @@ async def api_session(token: str) -> JSONResponse:
 @router.post("/api/bind")
 async def api_bind(request: Request) -> JSONResponse:
     """校验 UID + 区服并写入绑定，返回指挥官昵称。"""
-    body = await request.json()
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "message": "请求体不是合法 JSON。"}, status_code=400)
     token = str(body.get("token", "")).strip()
     uid = str(body.get("uid", "")).strip()
     le3_id = str(body.get("le3_id", "")).strip()

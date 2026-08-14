@@ -25,7 +25,7 @@ uv run python -m playwright install chromium   # 安装渲染浏览器（国内�
 ```
 bot.py                 # 入口：nonebot.init -> 按 ADAPTERS 配置注册适配器（默认 onebot.v11，import 守卫跳过未安装）-> load_from_toml
 src/nonebot_plugin_azurlane/
-  __init__.py          # require htmlrender；isinstance(driver, ASGIMixin) 判断后挂载 FastAPI 路由（勿在此加 CORS，跨域由使用者配置）
+  __init__.py          # require htmlrender；isinstance(driver, ASGIMixin) 且 server_app 非 None 才挂载 FastAPI 路由（兼容 noneflow 插件测试 fake 驱动：实现 ASGIMixin 但 server_app 恒为 None；勿在此加 CORS，跨域由使用者配置）
   config.py            # AZURLANE_* 配置（Cookie、绑定页 URL、API 地址、管理员 QQ）
   le3api.py            # le3-api 客户端：get/user_detail、get/build_record（分页），httpx.AsyncClient（禁止同步）
   types.py             # le3-api 响应结构 TypedDict（UserDetail / BuildRecordResult 等）

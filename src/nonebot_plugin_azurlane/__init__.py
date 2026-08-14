@@ -44,9 +44,10 @@ __plugin_meta__ = PluginMetadata(
 
 driver = get_driver()
 
-# 仅 FastAPI/ASGI 驱动才有 server_app 可挂载 Web 登录路由；其它驱动下
-# Web 登录绑定不可用，仅指令功能可用。跨域由使用者自行配置（勿在此加 CORS）。
-if isinstance(driver, ASGIMixin):
+# 仅 FastAPI/ASGI 驱动才挂载 Web 登录路由；插件测试（noneflow fake 驱动）虽
+# 实现 ASGIMixin 但 server_app 恒为 None，必须一并判断。其它驱动下 Web 登录
+# 绑定不可用，仅指令功能可用。跨域由使用者自行配置（勿在此加 CORS）。
+if isinstance(driver, ASGIMixin) and driver.server_app is not None:
     from .web import router
 
     driver.server_app.include_router(router)
