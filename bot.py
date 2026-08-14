@@ -4,19 +4,18 @@
 ADAPTERS 列出（逗号分隔协议名）即可启用。未安装/不可用的适配器仅告警跳过。
 """
 
-import importlib
 import os
+import importlib
 
 import nonebot
-from nonebot.drivers import Driver
 from nonebot.log import logger
+from nonebot.drivers import Driver
 
 # 协议名 -> 适配器模块路径（模块在 nonebot.adapters.<name> 下，均导出 Adapter 类）
 _ADAPTER_MODULES: dict[str, str] = {
     "onebot.v11": "nonebot.adapters.onebot.v11",
     "onebot.v12": "nonebot.adapters.onebot.v12",
     "qq": "nonebot.adapters.qq",
-    "qqguild": "nonebot.adapters.qqguild",
     "satori": "nonebot.adapters.satori",
     "red": "nonebot.adapters.red",
     "telegram": "nonebot.adapters.telegram",
@@ -28,8 +27,6 @@ _ADAPTER_MODULES: dict[str, str] = {
     "minecraft": "nonebot.adapters.minecraft",
     "console": "nonebot.adapters.console",
     "matrix": "nonebot.adapters.matrix",
-    "slack": "nonebot.adapters.slack",
-    "whatsapp": "nonebot.adapters.whatsapp",
     "villa": "nonebot.adapters.villa",
     "milky": "nonebot.adapters.milky",
 }
