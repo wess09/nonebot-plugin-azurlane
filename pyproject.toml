@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-azurlane"
-version = "0.1.3"
+version = "0.1.4"
 description = "碧蓝航线指挥官信息 / 建造记录查询插件"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -48,7 +48,7 @@ requires = ["uv_build>=0.10.0,<0.11.0"]
 build-backend = "uv_build"
 
 [tool.bumpversion]
-current_version = "0.1.3"
+current_version = "0.1.4"
 commit = true
 message = "release: bump version from {current_version} to {new_version}"
 tag = true
